@@ -144,3 +144,24 @@ function exportDexieJson() {
     a.download = "modified-dexie-export.json";
     a.click();
 }
+
+/* ---------------------------------------------------------
+   Loader Toolbox Actions
+--------------------------------------------------------- */
+
+function openDexieFile() {
+    document.getElementById("dexieFileInput").click();
+}
+
+document.getElementById("dexieFileInput").addEventListener("change", function (e) {
+    const file = e.target.files[0];
+    if (file) {
+        loadDexieExportFile(file);
+    }
+});
+
+function saveDexieChanges() {
+    // No download — just internal state update
+    // Later: add Dexie write-back logic if needed
+    alert("Changes saved to memory.");
+}
