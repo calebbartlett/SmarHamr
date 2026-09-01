@@ -6,17 +6,16 @@
 
     <link rel="stylesheet" href="smarhamr-ui.css">
     <script src="smarhamr-workbench-ui.js"></script>
+    <script src="smarhamr-workbench-loader.js"></script>
     <script src="workbench-dexie.js"></script>
 </head>
 
 <body>
 
-    <!-- Shared Top Bar -->
     <div id="topbar"></div>
 
     <div id="layout">
 
-        <!-- Left Navigation -->
         <div class="left-nav">
             <div id="loaderToolbox"></div>
 
@@ -24,7 +23,6 @@
             <div id="dexieTableList"></div>
         </div>
 
-        <!-- Workspace -->
         <div class="workspace">
             <div class="panel">
                 <div class="panel-header">Dexie Table Editor</div>
@@ -34,7 +32,6 @@
 
     </div>
 
-    <!-- Clipboard -->
     <div id="clipboardTab">Clipboard</div>
     <div id="clipboardPanel">
         <textarea id="clipboardText"></textarea>
@@ -43,7 +40,7 @@
     <script>
         smarhamrCurrentMode = "dexie";
         initTopBar();
-        // loader toolbox will be added later
+        initLoaderToolbox();
     </script>
 
 </body>
