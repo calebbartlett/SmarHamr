@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>SmarHamr Workbench — Thread Mode</title>
+    <title>Workbench — Threads</title>
 
     <link rel="stylesheet" href="smarhamr-ui.css">
     <script src="smarhamr-workbench-ui.js"></script>
@@ -13,11 +13,12 @@
     <!-- Shared Top Bar -->
     <div id="topbar"></div>
 
-    <!-- Main Layout -->
     <div id="layout">
 
         <!-- Left Navigation -->
         <div class="left-nav">
+            <div id="loaderToolbox"></div>
+
             <h2>Threads</h2>
             <div id="threadList"></div>
         </div>
@@ -41,6 +42,7 @@
     <script>
         smarhamrCurrentMode = "thread";
         initTopBar();
+        // loader toolbox will be added later
     </script>
 
 </body>
