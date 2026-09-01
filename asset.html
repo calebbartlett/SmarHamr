@@ -1,21 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <title>SmarHamr Workbench — Asset Mode</title>
+
     <link rel="stylesheet" href="smarhamr-ui.css">
     <script src="smarhamr-workbench-ui.js"></script>
 </head>
+
 <body>
 
-<div id="topbar"></div>
+    <!-- Shared Top Bar -->
+    <div id="topbar"></div>
 
-<div id="layout">
-    <!-- left nav + workspace -->
-</div>
+    <!-- Main Layout -->
+    <div id="layout">
 
-<script>
-    smarhamrCurrentMode = "asset";
-    initTopBar();
-</script>
+        <!-- Left Navigation -->
+        <div class="left-nav">
+            <h2>Assets</h2>
+            <div id="assetList"></div>
+        </div>
+
+        <!-- Workspace -->
+        <div class="workspace">
+            <div class="panel">
+                <div class="panel-header">Asset Workspace</div>
+                <div id="assetWorkspace"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Clipboard -->
+    <div id="clipboardTab">Clipboard</div>
+    <div id="clipboardPanel">
+        <textarea id="clipboardText"></textarea>
+    </div>
+
+    <script>
+        smarhamrCurrentMode = "asset";
+        initTopBar();
+    </script>
 
 </body>
 </html>
