@@ -2,64 +2,85 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>SmarHamr Workbench</title>
+    <title>SmarHamr</title>
 
     <link rel="stylesheet" href="smarhamr-ui.css">
+
+    <style>
+        body {
+            overflow-y: auto; /* allow scrolling */
+            text-align: center; /* center everything */
+            padding: 40px 0;
+        }
+
+        #faqBox {
+            width: 80%;
+            max-width: 700px;
+            height: 200px;
+            margin: 30px auto;
+            padding: 14px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            resize: none;
+        }
+
+        .tool-button {
+            padding: 12px 20px;
+            margin: 10px;
+            background: var(--bg-nav);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            color: var(--text);
+            transition: var(--transition);
+            font-size: 1rem;
+        }
+
+        .tool-button:hover {
+            background: var(--accent-hover);
+        }
+    </style>
 </head>
 
 <body>
 
-    <div class="workspace" style="max-width: 800px; margin: 40px auto;">
+    <h1>SmarHamr</h1>
+    <p style="color: var(--text-dim); font-size: 1.1rem;">
+        A unified way to explore and edit Perchance exports.
+    </p>
 
-        <h1>SmarHamr Workbench</h1>
-        <p style="color: var(--text-dim); font-size: 1.1rem;">
-            A unified way to explore, edit, and understand Perchance profiles — now called assets.
-        </p>
-
-        <button class="button mt-20" onclick="enterWorkbench()">
-            Enter Workbench
+    <!-- Workbench Button -->
+    <div>
+        <button class="tool-button"
+                onmouseover="showFAQ(workbenchFAQ)"
+                onclick="enterWorkbench()">
+            Workbench
         </button>
-
-        <!-- FAQ: What are assets? -->
-        <div class="panel mt-20">
-            <div class="panel-header">What are assets?</div>
-            <p>
-                An asset is a reusable profile that defines behavior, personality, rules, or context.
-                Characters, worlds, interaction profiles, and system personas are all assets.
-                Workbench treats them the same so you can build anything without switching modes.
-            </p>
-        </div>
-
-        <!-- FAQ: Why not “characters”? -->
-        <div class="panel">
-            <div class="panel-header">Why not “characters”?</div>
-            <p>
-                Perchance calls every profile a character, even when it isn’t one.
-                Workbench uses the term “asset” because it reflects how the data actually works.
-                Assets are neutral — they can become characters, environments, scenes, groups of people, village, a ship, worlds, computer systems, or anything you design.
-            </p>
-        </div>
-
-        <!-- FAQ: How does this relate to Perchance? -->
-        <div class="panel">
-            <div class="panel-header">How does this relate to Perchance?</div>
-            <p>
-                When you import a Perchance export, all profiles become assets in Workbench.
-                Nothing changes in your data — only the way you understand and interact with it.
-                Workbench helps you think in broader terms so you can build more powerful systems.
-            </p>
-        </div>
-
-        <p style="color: var(--text-dim); margin-top: 40px;">
-            Mobile version coming soon.
-        </p>
-
     </div>
 
+    <!-- Dynamic FAQ Box -->
+    <textarea id="faqBox" readonly>
+Hover over Workbench to learn what it does.
+    </textarea>
+
+    <p style="color: var(--text-dim); margin-top: 40px;">
+        Mobile version coming soon.
+    </p>
+
     <script>
+        const workbenchFAQ =
+`Workbench is a tool for exploring and editing Perchance exports.
+Instead of treating everything as a "character," Workbench uses the term "asset."
+Assets are reusable profiles: characters, worlds, interaction logic, or anything you design.
+This helps you think beyond character sheets and build more flexible systems.`;
+
+        function showFAQ(text) {
+            document.getElementById("faqBox").value = text;
+        }
+
         function enterWorkbench() {
-            // Later: detect device type and route accordingly
-            // For now: always go to desktop Workbench
             window.location.href = "workbench-asset.html";
         }
     </script>
