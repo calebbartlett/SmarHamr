@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>SmarHamr Workbench — Asset Mode</title>
+    <title>Workbench — Assets</title>
 
     <link rel="stylesheet" href="smarhamr-ui.css">
     <script src="smarhamr-workbench-ui.js"></script>
@@ -13,17 +13,15 @@
     <!-- Shared Top Bar -->
     <div id="topbar"></div>
 
-    <!-- Main Layout -->
     <div id="layout">
 
+        <!-- Left Navigation -->
         <div class="left-nav">
+            <div id="loaderToolbox"></div>
 
-    <div id="loaderToolbox"></div>
-
-    <h2>Assets</h2>
-    <div id="assetList"></div>
-</div>
-
+            <h2>Assets</h2>
+            <div id="assetList"></div>
+        </div>
 
         <!-- Workspace -->
         <div class="workspace">
@@ -44,6 +42,7 @@
     <script>
         smarhamrCurrentMode = "asset";
         initTopBar();
+        // loader toolbox will be added later
     </script>
 
 </body>
