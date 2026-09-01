@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>SmarHamr Workbench — Thread Mode</title>
+
+    <link rel="stylesheet" href="smarhamr-ui.css">
+    <script src="smarhamr-workbench-ui.js"></script>
+</head>
+
+<body>
+
+    <!-- Shared Top Bar -->
+    <div id="topbar"></div>
+
+    <!-- Main Layout -->
+    <div id="layout">
+
+        <!-- Left Navigation -->
+        <div class="left-nav">
+            <h2>Threads</h2>
+            <div id="threadList"></div>
+        </div>
+
+        <!-- Workspace -->
+        <div class="workspace">
+            <div class="panel">
+                <div class="panel-header">Thread Workspace</div>
+                <div id="threadWorkspace"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Clipboard -->
+    <div id="clipboardTab">Clipboard</div>
+    <div id="clipboardPanel">
+        <textarea id="clipboardText"></textarea>
+    </div>
+
+    <script>
+        smarhamrCurrentMode = "thread";
+        initTopBar();
+    </script>
+
+</body>
+</html>
