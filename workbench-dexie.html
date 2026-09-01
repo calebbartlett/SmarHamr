@@ -2,10 +2,11 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>SmarHamr Workbench — Dexie Editor</title>
+    <title>Workbench — Dexie Editor</title>
 
     <link rel="stylesheet" href="smarhamr-ui.css">
     <script src="smarhamr-workbench-ui.js"></script>
+    <script src="workbench-dexie.js"></script>
 </head>
 
 <body>
@@ -13,27 +14,15 @@
     <!-- Shared Top Bar -->
     <div id="topbar"></div>
 
-    <!-- Main Layout -->
     <div id="layout">
 
         <!-- Left Navigation -->
-<div class="left-nav">
+        <div class="left-nav">
+            <div id="loaderToolbox"></div>
 
-    <!-- Loader Toolbox -->
-    <div id="dexieToolbox" style="padding: 10px; border-bottom: 1px solid var(--border);">
-        <button class="button-small" onclick="openDexieFile()">File</button>
-        <button class="button-small" onclick="saveDexieChanges()">Save</button>
-        <button class="button-small" onclick="exportDexieJson()">Export</button>
-
-        <!-- Hidden file input -->
-        <input type="file" id="dexieFileInput" style="display:none"
-               accept=".json,.gz,.json.gz">
-    </div>
-
-    <h2>Tables</h2>
-    <div id="dexieTableList"></div>
-</div>
-
+            <h2>Tables</h2>
+            <div id="dexieTableList"></div>
+        </div>
 
         <!-- Workspace -->
         <div class="workspace">
@@ -54,6 +43,7 @@
     <script>
         smarhamrCurrentMode = "dexie";
         initTopBar();
+        // loader toolbox will be added later
     </script>
 
 </body>
