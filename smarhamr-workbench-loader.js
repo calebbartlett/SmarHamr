@@ -23,19 +23,24 @@ function initLoaderToolbox() {
     if (box) box.innerHTML = renderLoaderToolbox();
 
     const fileInput = document.getElementById("workbenchFileInput");
-    if (fileInput) {
-        fileInput.addEventListener("change", (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                // Dexie mode loader
-                if (typeof loadDexieExportFile === "function") {
-                    loadDexieExportFile(file);
-                }
-                // Asset mode loader (future)
-                // Thread mode loader (future)
-            }
-        });
-    }
+    if (!fileInput) return;
+
+    fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (smarhamrCurrentMode === "dexie" && typeof loadDexieExportFile === "function") {
+            loadDexieExportFile(file);
+        }
+
+        if (smarhamrCurrentMode === "asset" && typeof loadAssetExportFile === "function") {
+            loadAssetExportFile(file);
+        }
+
+        if (smarhamrCurrentMode === "thread" && typeof loadThreadExportFile === "function") {
+            loadThreadExportFile(file);
+        }
+    });
 }
 
 /* ---------------------------------------------------------
@@ -51,7 +56,19 @@ function saveWorkbenchChanges() {
 }
 
 function exportWorkbenchData() {
-    if (typeof exportDexieJson === "function") {
+    if (smarhamrCurrentMode === "dexie" && typeof exportDexieJson === "function") {
         exportDexieJson();
     }
+}
+
+/* ---------------------------------------------------------
+   Placeholder loaders for modes not implemented yet
+--------------------------------------------------------- */
+
+function loadAssetExportFile(file) {
+    alert("Asset loader not implemented yet.");
+}
+
+function loadThreadExportFile(file) {
+    alert("Thread loader not implemented yet.");
 }
