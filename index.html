@@ -54,3 +54,40 @@
     <p style="color: var(--text-dim); font-size: 1.1rem;">
         A unified way to explore and edit personas for character or world building.
     </p>
+
+    <!-- Workbench Button -->
+    <div>
+        <button class="tool-button"
+                onmouseover="showFAQ(workbenchFAQ)"
+                onclick="enterWorkbench()">
+            Perchance Workbench
+        </button>
+    </div>
+
+    <!-- Dynamic FAQ Box -->
+    <textarea id="faqBox" readonly>
+Hover over Workbench to learn what it does.
+    </textarea>
+
+    <p style="color: var(--text-dim); margin-top: 40px;">
+        Mobile version coming soon.
+    </p>
+
+    <script>
+        const workbenchFAQ =
+`Workbench is a tool for exploring and editing Perchance exports.
+Instead of treating everything as a "character," Workbench uses the term "asset."
+Assets are reusable profiles: characters, worlds, interaction logic, or anything you design.
+This helps you think beyond character sheets and build more flexible systems.`;
+
+        function showFAQ(text) {
+            document.getElementById("faqBox").value = text;
+        }
+
+        function enterWorkbench() {
+            window.location.href = "workbench-asset.html";
+        }
+    </script>
+
+</body>
+</html>
