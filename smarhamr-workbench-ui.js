@@ -54,9 +54,9 @@ function switchMode(mode) {
     updateTopBarActiveMode();
 
     // Redirect to correct page
-    if (mode === "asset") window.location.href = "asset.html";
-    if (mode === "thread") window.location.href = "thread.html";
-    if (mode === "dexie") window.location.href = "dexie.html";
+    if (mode === "asset") window.location.href = "workbench-asset.html";
+    if (mode === "thread") window.location.href = "workbench-thread.html";
+    if (mode === "dexie") window.location.href = "workbench-dexie.html";
 }
 
 /* Highlight active mode button */
