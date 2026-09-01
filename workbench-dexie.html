@@ -17,10 +17,23 @@
     <div id="layout">
 
         <!-- Left Navigation -->
-        <div class="left-nav">
-            <h2>Tables</h2>
-            <div id="dexieTableList"></div>
-        </div>
+<div class="left-nav">
+
+    <!-- Loader Toolbox -->
+    <div id="dexieToolbox" style="padding: 10px; border-bottom: 1px solid var(--border);">
+        <button class="button-small" onclick="openDexieFile()">File</button>
+        <button class="button-small" onclick="saveDexieChanges()">Save</button>
+        <button class="button-small" onclick="exportDexieJson()">Export</button>
+
+        <!-- Hidden file input -->
+        <input type="file" id="dexieFileInput" style="display:none"
+               accept=".json,.gz,.json.gz">
+    </div>
+
+    <h2>Tables</h2>
+    <div id="dexieTableList"></div>
+</div>
+
 
         <!-- Workspace -->
         <div class="workspace">
