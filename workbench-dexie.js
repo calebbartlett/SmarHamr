@@ -1,9 +1,19 @@
 /* ============================================================================
-   SmarHamr — Dexie Workbench Loader (Simple, Stable, No Tables)
+   SmarHamr — Dexie Workbench Loader (Simple, Stable, Filename-aware)
    ============================================================================ */
 
 window.smarhamrExport = null;   // global export object
-window.smarhamrCurrentMode = "dexie";  // future-proof
+window.smarhamrCurrentFileName = "No file loaded";
+
+/* ---------------------------------------------------------
+   Update filename in top bar
+--------------------------------------------------------- */
+
+function updateCurrentFileName(name) {
+    window.smarhamrCurrentFileName = name;
+    const el = document.getElementById("currentFileName");
+    if (el) el.textContent = name;
+}
 
 /* ---------------------------------------------------------
    Utility: GZIP decompress + JSON parse
@@ -11,6 +21,8 @@ window.smarhamrCurrentMode = "dexie";  // future-proof
 
 async function loadFile(file) {
     const isGzip = file.name.endsWith(".gz");
+
+    updateCurrentFileName(file.name);
 
     if (isGzip) {
         const arrayBuffer = await file.arrayBuffer();
@@ -34,6 +46,7 @@ async function handleFileLoad(file) {
 
         // Persist for future expansion
         localStorage.setItem("smarhamrExport", JSON.stringify(data));
+        localStorage.setItem("smarhamrExportFileName", file.name);
 
         renderDexieWorkspace(data);
 
@@ -108,9 +121,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Restore saved export if present
     const saved = localStorage.getItem("smarhamrExport");
+    const savedName = localStorage.getItem("smarhamrExportFileName");
+
     if (saved) {
         try {
             window.smarhamrExport = JSON.parse(saved);
+            updateCurrentFileName(savedName || "No file loaded");
             renderDexieWorkspace(window.smarhamrExport);
         } catch (err) {
             console.warn("Failed to restore saved export:", err);
