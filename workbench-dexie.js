@@ -1,5 +1,5 @@
 /* ============================================================================
-   SmarHamr — Dexie Workbench Loader (Simple, Stable)
+   SmarHamr — Dexie Workbench Loader (Simple, Stable, No Tables)
    ============================================================================ */
 
 window.smarhamrExport = null;   // global export object
@@ -36,7 +36,6 @@ async function handleFileLoad(file) {
         localStorage.setItem("smarhamrExport", JSON.stringify(data));
 
         renderDexieWorkspace(data);
-        renderDexieTableList(data);
 
     } catch (err) {
         alert("Invalid JSON or JSON.GZ file.");
@@ -45,75 +44,7 @@ async function handleFileLoad(file) {
 }
 
 /* ---------------------------------------------------------
-   Render left nav table list (skip structural metadata)
---------------------------------------------------------- */
-
-function renderDexieTableList(data) {
-    const list = document.getElementById("dexieTableList");
-    if (!list) return;
-
-    list.innerHTML = "";
-
-    // Dexie export structure: { formatName, formatVersion, data: { tables: [...] } }
-    const root = data.data && Array.isArray(data.data.tables)
-        ? data.data.tables
-        : null;
-
-    if (!root) {
-        list.innerHTML = `<p style="color:#777;">No Dexie tables found.</p>`;
-        return;
-    }
-
-    root.forEach(table => {
-        const name = table.name || "(unnamed table)";
-        const btn = document.createElement("button");
-        btn.className = "button-small";
-        btn.textContent = `${name} (${table.rowCount ?? "?"} rows)`;
-        btn.onclick = () => renderDexieTable(table);
-        list.appendChild(btn);
-    });
-}
-
-/* ---------------------------------------------------------
-   Render table content (safe editing per table)
---------------------------------------------------------- */
-
-function renderDexieTable(table) {
-    const workspace = document.getElementById("dexieWorkspace");
-    workspace.innerHTML = "";
-
-    const header = document.createElement("div");
-    header.style.color = "#ccc";
-    header.style.marginBottom = "10px";
-    header.textContent = `Table: ${table.name || "(unnamed table)"}`;
-    workspace.appendChild(header);
-
-    const editor = document.createElement("textarea");
-    editor.id = "dexieEditor";
-    editor.value = JSON.stringify(table.rows ?? table.data ?? [], null, 2);
-    workspace.appendChild(editor);
-
-    editor.addEventListener("input", () => {
-        try {
-            const updated = JSON.parse(editor.value);
-
-            // Update the table rows in the export safely
-            const tables = window.smarhamrExport?.data?.tables;
-            if (Array.isArray(tables)) {
-                const idx = tables.findIndex(t => t.name === table.name);
-                if (idx !== -1) {
-                    tables[idx].rows = updated;
-                    localStorage.setItem("smarhamrExport", JSON.stringify(window.smarhamrExport));
-                }
-            }
-        } catch (err) {
-            // ignore invalid JSON while typing
-        }
-    });
-}
-
-/* ---------------------------------------------------------
-   Render full JSON workspace (initial load)
+   Render full JSON workspace (editable)
 --------------------------------------------------------- */
 
 function renderDexieWorkspace(data) {
@@ -181,7 +112,6 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             window.smarhamrExport = JSON.parse(saved);
             renderDexieWorkspace(window.smarhamrExport);
-            renderDexieTableList(window.smarhamrExport);
         } catch (err) {
             console.warn("Failed to restore saved export:", err);
         }
