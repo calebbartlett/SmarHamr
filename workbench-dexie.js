@@ -1,5 +1,5 @@
 /* ============================================================================
-   SmarHamr — Dexie Workbench Loader (Simple, Safe Editing)
+   SmarHamr — Dexie Workbench Loader (Simple, Stable)
    ============================================================================ */
 
 window.smarhamrExport = null;   // global export object
@@ -75,88 +75,6 @@ function renderDexieTableList(data) {
 }
 
 /* ---------------------------------------------------------
-   Safe editable fields inspector
---------------------------------------------------------- */
-
-function getSafeEditableFields(obj, prefix = "") {
-    const safe = [];
-
-    for (const key in obj) {
-        const value = obj[key];
-        const path = prefix ? `${prefix}.${key}` : key;
-
-        // Skip structural metadata
-        if (["formatName", "formatVersion", "data", "$types", "id", "uuid",
-             "creationTime", "lastMessageTime"].includes(key)) {
-            continue;
-        }
-
-        // Primitive values are safe
-        if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-            safe.push({ path, value });
-            continue;
-        }
-
-        // Arrays of primitives are safe
-        if (Array.isArray(value) &&
-            value.every(v => typeof v === "string" || typeof v === "number" || typeof v === "boolean")) {
-            safe.push({ path, value });
-            continue;
-        }
-
-        // Simple objects of primitives are safe
-        if (typeof value === "object" && value !== null) {
-            const keys = Object.keys(value);
-            const allPrimitive = keys.every(k =>
-                typeof value[k] === "string" ||
-                typeof value[k] === "number" ||
-                typeof value[k] === "boolean"
-            );
-
-            if (allPrimitive) {
-                safe.push({ path, value });
-                continue;
-            }
-
-            // Recurse deeper
-            safe.push(...getSafeEditableFields(value, path));
-        }
-    }
-
-    return safe;
-}
-
-/* ---------------------------------------------------------
-   Render safe fields panel
---------------------------------------------------------- */
-
-function renderSafeFieldsPanel(data) {
-    let panel = document.getElementById("safeFieldsPanel");
-
-    if (!panel) {
-        panel = document.createElement("div");
-        panel.id = "safeFieldsPanel";
-        document.getElementById("dexieWorkspace").appendChild(panel);
-    }
-
-    const safe = getSafeEditableFields(data);
-
-    panel.innerHTML = `<h3>Safe Editable Fields</h3>`;
-
-    if (safe.length === 0) {
-        panel.innerHTML += `<p style="color:#777;">No safe fields detected.</p>`;
-        return;
-    }
-
-    safe.forEach(item => {
-        const div = document.createElement("div");
-        div.style.marginBottom = "6px";
-        div.textContent = `${item.path}: ${JSON.stringify(item.value)}`;
-        panel.appendChild(div);
-    });
-}
-
-/* ---------------------------------------------------------
    Render table content (safe editing per table)
 --------------------------------------------------------- */
 
@@ -186,15 +104,12 @@ function renderDexieTable(table) {
                 if (idx !== -1) {
                     tables[idx].rows = updated;
                     localStorage.setItem("smarhamrExport", JSON.stringify(window.smarhamrExport));
-                    renderSafeFieldsPanel(window.smarhamrExport);
                 }
             }
         } catch (err) {
             // ignore invalid JSON while typing
         }
     });
-
-    renderSafeFieldsPanel(window.smarhamrExport);
 }
 
 /* ---------------------------------------------------------
@@ -215,13 +130,10 @@ function renderDexieWorkspace(data) {
             const updated = JSON.parse(editor.value);
             window.smarhamrExport = updated;
             localStorage.setItem("smarhamrExport", JSON.stringify(updated));
-            renderSafeFieldsPanel(updated);
         } catch (err) {
             // ignore invalid JSON while typing
         }
     });
-
-    renderSafeFieldsPanel(data);
 }
 
 /* ---------------------------------------------------------
