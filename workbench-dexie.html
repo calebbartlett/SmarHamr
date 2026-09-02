@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>SmarHamr Workbench — Dexie Editor</title>
+    <title>SmarHamr Dexie Editor</title>
 
     <link rel="stylesheet" href="smarhamr-ui.css">
 
@@ -13,6 +13,28 @@
     <script src="workbench-dexie.js"></script>
 
     <style>
+        #topbar {
+            height: 40px;
+            border-bottom: 1px solid #444;
+            padding: 10px;
+            font-size: 1.1rem;
+            color: #eee;
+            background: #111;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #currentFileName {
+            color: #ccc;
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+        #branding {
+            color: #eee;
+            font-size: 1rem;
+            opacity: 0.85;
+        }
+
         #dexieEditor {
             font-family: monospace;
             background: #111;
@@ -54,21 +76,16 @@
             padding: 10px;
             overflow-y: auto;
         }
-        #topbar {
-            height: 40px;
-            border-bottom: 1px solid #444;
-            padding: 10px;
-            font-size: 1.2rem;
-            color: #eee;
-            background: #111;
-        }
     </style>
 </head>
 
 <body>
 
     <!-- Top Bar -->
-    <div id="topbar">SmarHamr Dexie Editor</div>
+    <div id="topbar">
+        <div id="currentFileName">No file loaded</div>
+        <div id="branding">SmarHamr Dexie Editor by yggdrasil</div>
+    </div>
 
     <div id="layout">
 
@@ -85,7 +102,6 @@
                        style="display:none;">
             </div>
 
-            <!-- NO TABLES SECTION -->
         </div>
 
         <!-- Workspace -->
