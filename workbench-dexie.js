@@ -32,10 +32,12 @@ async function handleFileLoad(file) {
         const data = await loadFile(file);
         window.smarhamrExport = data;
 
-        // Persist for future modes (future expansion)
+        // Persist for future expansion
         localStorage.setItem("smarhamrExport", JSON.stringify(data));
 
         renderDexieWorkspace(data);
+        renderDexieTableList(data);
+
     } catch (err) {
         alert("Invalid JSON or JSON.GZ file.");
         console.error(err);
@@ -43,44 +45,79 @@ async function handleFileLoad(file) {
 }
 
 /* ---------------------------------------------------------
-   Pretty JSON viewer + editor + search
+   Render left nav table list
+--------------------------------------------------------- */
+
+function renderDexieTableList(data) {
+    const list = document.getElementById("dexieTableList");
+    if (!list) return;
+
+    list.innerHTML = "";
+
+    const tables = Object.keys(data);
+
+    tables.forEach(name => {
+        const btn = document.createElement("button");
+        btn.className = "button-small";
+        btn.textContent = name;
+        btn.onclick = () => renderDexieTable(name);
+        list.appendChild(btn);
+    });
+}
+
+/* ---------------------------------------------------------
+   Render table content
+--------------------------------------------------------- */
+
+function renderDexieTable(tableName) {
+    const workspace = document.getElementById("dexieWorkspace");
+    workspace.innerHTML = "";
+
+    const header = document.createElement("div");
+    header.style.color = "#ccc";
+    header.style.marginBottom = "10px";
+    header.textContent = `Table: ${tableName}`;
+    workspace.appendChild(header);
+
+    const editor = document.createElement("textarea");
+    editor.id = "dexieEditor";
+    editor.value = JSON.stringify(window.smarhamrExport[tableName], null, 2);
+    workspace.appendChild(editor);
+
+    // Update global export when user edits JSON
+    editor.addEventListener("input", () => {
+        try {
+            const updated = JSON.parse(editor.value);
+            window.smarhamrExport[tableName] = updated;
+            localStorage.setItem("smarhamrExport", JSON.stringify(window.smarhamrExport));
+        } catch (err) {
+            // ignore invalid JSON while typing
+        }
+    });
+}
+
+/* ---------------------------------------------------------
+   Render full JSON workspace (initial load)
 --------------------------------------------------------- */
 
 function renderDexieWorkspace(data) {
     const workspace = document.getElementById("dexieWorkspace");
     workspace.innerHTML = "";
 
-    // Search bar
-    const searchBox = document.createElement("input");
-    searchBox.type = "text";
-    searchBox.placeholder = "Search JSON...";
-    searchBox.className = "search-box";
-    searchBox.oninput = () => applySearch(searchBox.value);
-    workspace.appendChild(searchBox);
-
-    // Editable JSON area
     const editor = document.createElement("textarea");
     editor.id = "dexieEditor";
     editor.value = JSON.stringify(data, null, 2);
-    editor.style.width = "100%";
-    editor.style.height = "calc(100vh - 200px)";
     workspace.appendChild(editor);
-}
 
-function applySearch(query) {
-    const editor = document.getElementById("dexieEditor");
-    if (!editor) return;
-
-    const text = editor.value;
-    if (!query) {
-        editor.value = JSON.stringify(window.smarhamrExport, null, 2);
-        return;
-    }
-
-    // Simple search: highlight matches
-    const regex = new RegExp(query, "gi");
-    const highlighted = text.replace(regex, match => `<<${match}>>`);
-    editor.value = highlighted;
+    editor.addEventListener("input", () => {
+        try {
+            const updated = JSON.parse(editor.value);
+            window.smarhamrExport = updated;
+            localStorage.setItem("smarhamrExport", JSON.stringify(updated));
+        } catch (err) {
+            // ignore invalid JSON while typing
+        }
+    });
 }
 
 /* ---------------------------------------------------------
@@ -96,19 +133,12 @@ function exportGzipped() {
     const prefix = prompt("Enter file prefix (no extension):");
     if (!prefix) return;
 
-    // One-line JSON
     const jsonOneLine = JSON.stringify(window.smarhamrExport);
-
-    // GZIP
     const gzData = pako.gzip(jsonOneLine);
-
-    // Blob
     const blob = new Blob([gzData], { type: "application/gzip" });
 
-    // Filename
     const filename = `${prefix}.smarhamer.json.gz`;
 
-    // Download
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = filename;
@@ -117,10 +147,10 @@ function exportGzipped() {
 }
 
 /* ---------------------------------------------------------
-   Hook up loader toolbox buttons
+   Initialize on page load
 --------------------------------------------------------- */
 
-function initDexieLoader() {
+document.addEventListener("DOMContentLoaded", () => {
     const fileInput = document.getElementById("workbenchFileInput");
     if (!fileInput) return;
 
@@ -135,16 +165,9 @@ function initDexieLoader() {
         try {
             window.smarhamrExport = JSON.parse(saved);
             renderDexieWorkspace(window.smarhamrExport);
+            renderDexieTableList(window.smarhamrExport);
         } catch (err) {
             console.warn("Failed to restore saved export:", err);
         }
     }
-}
-
-/* ---------------------------------------------------------
-   Initialize on page load
---------------------------------------------------------- */
-
-document.addEventListener("DOMContentLoaded", () => {
-    initDexieLoader();
 });
