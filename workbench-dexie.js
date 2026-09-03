@@ -552,5 +552,4 @@ function onLoadCleanSmarHamrProfile() {
                 { name: "summaries", schema: "hash,threadId", rowCount: 0 },
                 { name: "memories", schema: "++id,[summaryHash+threadId],[characterId+status],[threadId+status],[threadId+index],threadId", rowCount: 0 },
                 { name: "lore", schema: "++id,bookId,bookUrl", rowCount: 0 },
-                { name: "textEmbeddingCache", schema: "++id,textHash,&[textHash+modelName]", rowCount: 0 },
-                { name: "textCompressionCache", schema: "++id,uncompressedTextHash,&
+                { name: "textEmbeddingCache", schema: "++id,textHash,&[textHash+modelName
