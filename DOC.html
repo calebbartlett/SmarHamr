@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SmarHamr Workbench Documentation</title>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.5; padding: 2rem; max-width: 900px; margin: 0 auto; }
+    h1, h2, h3 { margin-top: 1.5rem; }
+    code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; }
+    pre { background: #f4f4f4; padding: 1rem; border-radius: 4px; overflow-x: auto; }
+    hr { margin: 2rem 0; }
+  </style>
+</head>
+<body>
+
+<h1>SmarHamr Workbench Documentation</h1>
+
+<p>
+  SmarHamr Workbench is a tooling layer for inspecting, modifying, and validating
+  Perchance Dexie exports. It focuses on structural integrity, safe automation,
+  and asset-aware behavior (Tutor, characters, worlds).
+</p>
+
+<hr>
+
+<h2>1. Dexie Export Handling</h2>
+
+<h3>1.1 Supported Format</h3>
+<p>
+  The Workbench expects Dexie v1 exports with:
+</p>
+<ul>
+  <li><code>formatName = "dexie"</code></li>
+  <li><code>formatVersion = 1</code></li>
+  <li><code>databaseName = "chatbot-ui-v1"</code></li>
+  <li><code>databaseVersion = 90</code></li>
+</ul>
+
+<h3>1.2 Required Tables</h3>
+<p>
+  The following tables must exist and be marked as inbound:
+</p>
+<ul>
+  <li><code>characters</code></li>
+  <li><code>threads</code></li>
+  <li><code>messages</code></li>
+  <li><code>misc</code></li>
+  <li><code>summaries</code></li>
+  <li><code>memories</code></li>
+  <li><code>lore</code></li>
+  <li><code>textEmbeddingCache</code></li>
+  <li><code>textCompressionCache</code></li>
+</ul>
+
+<p>
+  The validator checks:
+</p>
+<ul>
+  <li>Presence of each required table in both <code>tables</code> and <code>data</code>.</li>
+  <li><code>inbound: true</code> on each data table.</li>
+  <li><code>rowCount</code> in <code>tables</code> matches <code>rows.length</code> in <code>data</code>.</li>
+</ul>
+
+<h3>1.3 Row Count Synchronization</h3>
+<p>
+  Before export or after structural changes, the Workbench runs a sync:
+</p>
+<pre><code>meta.rowCount = dataEntry.rows.length;</code></pre>
+<p>
+  This keeps Dexie metadata aligned with actual row arrays and prevents
+  Perchance from misreading table sizes.
+</p>
+
+<hr>
+
+<h2>2. Workspace and File I/O</h2>
+
+<h3>2.1 Loading Files</h3>
+<p>
+  The Workbench supports:
+</p>
+<ul>
+  <li>Plain JSON exports.</li>
+  <li>Gzipped JSON exports (<code>.json.gz</code>), decompressed via <code>pako.ungzip</code>.</li>
+</ul>
+
+<p>
+  On load:
+</p>
+<ul>
+  <li>File is parsed into a JSON object.</li>
+  <li>Row counts are synchronized.</li>
+  <li>Dexie structure is validated.</li>
+  <li>Export is stored in <code>window.smarhamrExport</code> and <code>localStorage</code>.</li>
+  <li>The full JSON is rendered into a textarea for direct editing.</li>
+</ul>
+
+<h3>2.2 Live Editing</h3>
+<p>
+  The main workspace is a textarea containing the entire export JSON. On input:
+</p>
+<ul>
+  <li>JSON is parsed back into an object.</li>
+  <li>Row counts are re-synced.</li>
+  <li>Validation is re-run.</li>
+  <li>Status line reflects success or JSON errors.</li>
+</ul>
+
+<h3>2.3 Exporting</h3>
+<p>
+  The Workbench can export the current in-memory JSON as a one-line string,
+  gzip it, and download it with a user-provided prefix:
+</p>
+<pre><code>&lt;prefix&gt;.smarhamer.json.gz</code></pre>
+
+<hr>
+
+<h2>3. SmarHamr Tutor</h2>
+
+<h3>3.1 Purpose</h3>
+<p>
+  The SmarHamr Tutor is a special character asset injected into the export to
+  help users understand Perchance exports and the Workbench itself. It lives
+  in the <code>characters</code>, <code>threads</code>, and <code>messages</code> tables.
+</p>
+
+<h3>3.2 Persona ID Namespace</h3>
+<p>
+  Tutor and future SmarHamr personas use IDs in the <code>333xx</code> range. The
+  Workbench scans existing character IDs and picks the next available ID
+  starting at <code>33300</code>.
+</p>
+
+<h3>3.3 Tutor Bundle</h3>
+<p>
+  The Tutor bundle consists of:
+</p>
+<ul>
+  <li><strong>Character row</strong> — defines the Tutor persona.</li>
+  <li><strong>Thread row</strong> — a dedicated Tutor thread.</li>
+  <li><strong>Message row</strong> — an initial system-style message noting that the export was modified by SmarHamr.</li>
+</ul>
+
+<p>
+  The Tutor character includes:
+</p>
+<ul>
+  <li><code>name = "SmarHamr Tutor"</code></li>
+  <li><code>modelName = "perchance-ai"</code></li>
+  <li><code>fitMessagesInContextMethod = "summarizeOld"</code></li>
+  <li><code>textEmbeddingModelName = "Xenova/bge-base-en-v1.5"</code></li>
+  <li>An initial AI message linking to SmarHamr documentation.</li>
+</ul>
+
+<h3>3.4 Tutor Shortcut Bar</h3>
+<p>
+  The Tutor has a dedicated shortcut bar designed for analysis and guidance:
+</p>
+<pre><code>Explain  → /ai Explain this step-by-step.
+Docs     → /ai Show SmarHamr documentation.
+Inspect  → /ai Inspect this export and describe issues.
+Validate → /ai Validate this export.</code></pre>
+
+<p>
+  These shortcuts are attached to both:
+</p>
+<ul>
+  <li><code>characterRow.shortcutButtons</code></li>
+  <li><code>threadRow.shortcutButtons</code></li>
+</ul>
+
+<p>
+  This guarantees the shortcut bar appears when the Tutor is opened in Perchance.
+</p>
+
+<hr>
+
+<h2>4. Logic Engine</h2>
+
+<h3>4.1 Purpose</h3>
+<p>
+  The Logic Engine defines global “physics” and interaction rules for worlds
+  and characters. It is stored as structured JSON inside the user role
+  instruction field in the <code>misc</code> table.
+</p>
+
+<h3>4.2 Insertion Target</h3>
+<p>
+  The Logic Engine is appended to the row:
+</p>
+<pre><code>tableName: "misc"
+key: "userRoleInstruction"</code></pre>
+
+<p>
+  Existing user role text is preserved. The engine is appended below it.
+</p>
+
+<h3>4.3 Header Marker</h3>
+<p>
+  The Workbench inserts a clear header above the JSON module:
+</p>
+<pre><code>======== LOGIC ENGINE GOES HERE ========</code></pre>
+
+<h3>4.4 Module Structure</h3>
+<p>
+  The inserted JSON module has a structure similar to:
+</p>
+<pre><code>{
+  "logic_engine": {
+    "spirals": ["Hand", "Hearth", "Shadow"],
+    "pressure_levels": ["Soft", "Medium", "Hard"],
+    "tethers": { "types": ["stabilizing", "destabilizing", "amplifying", "dampening"] },
+    "state_elasticity": { "baseline_recovery": true, "collapse_vectors": true },
+    "interaction_memory": { "emotional_residue": true, "behavioral_inertia": true },
+    "environment_resonance": { "fields": ["ambient", "active", "overwhelming"] },
+    "adaptive_thresholds": { "dynamic_spiral_limits": true }
+  },
+  "note": "This logic engine belongs in the USER ROLE. It defines global physics for all worlds and characters."
+}</code></pre>
+
+<p>
+  Users can extend or modify this JSON to define custom world logic.
+</p>
+
+<hr>
+
+<h2>5. Clean SmarHamr Profile</h2>
+
+<h3>5.1 Purpose</h3>
+<p>
+  The Workbench can generate a “clean” SmarHamr profile: a minimal Dexie export
+  containing only:
+</p>
+<ul>
+  <li>One Tutor character.</li>
+  <li>One Tutor thread.</li>
+  <li>One Tutor message.</li>
+  <li>A basic <code>misc</code> table with user fields.</li>
+  <li>Empty <code>summaries</code>, <code>memories</code>, <code>lore</code>, <code>textEmbeddingCache</code>, <code>textCompressionCache</code>.</li>
+</ul>
+
+<h3>5.2 Usage</h3>
+<p>
+  This clean profile can be exported and imported into Perchance as a starting
+  point for SmarHamr-aware projects. It ensures:
+</p>
+<ul>
+  <li>Valid Dexie structure.</li>
+  <li>Presence of the Tutor.</li>
+  <li>Known baseline behavior.</li>
+</ul>
+
+<hr>
+
+<h2>6. Key Workbench Functions</h2>
+
+<h3>6.1 File and Workspace</h3>
+<ul>
+  <li><strong><code>handleFileLoad(file)</code>:</strong> load, parse, sync, validate, render.</li>
+  <li><strong><code>renderDexieWorkspace(data)</code>:</strong> show JSON in editable textarea.</li>
+  <li><strong><code>exportGzipped()</code>:</strong> export current JSON as gzipped one-line file.</li>
+</ul>
+
+<h3>6.2 Tutor</h3>
+<ul>
+  <li><strong><code>getNextPersonaId()</code>:</strong> find next ID in the <code>333xx</code> namespace.</li>
+  <li><strong><code>buildSmarHamrTutorBundle(personaId)</code>:</strong> construct character, thread, and message rows with Tutor shortcuts.</li>
+  <li><strong><code>onInsertSmarHamrTutor()</code>:</strong> inject Tutor bundle into existing export.</li>
+</ul>
+
+<h3>6.3 Logic Engine</h3>
+<ul>
+  <li><strong><code>buildLogicEngineModule()</code>:</strong> create the default logic engine JSON.</li>
+  <li><strong><code>onInsertLogicEngine()</code>:</strong> append header + JSON to <code>misc.userRoleInstruction</code>, preserving existing text.</li>
+</ul>
+
+<h3>6.4 Clean Profile</h3>
+<ul>
+  <li><strong><code>onLoadCleanSmarHamrProfile()</code>:</strong> build a minimal export with the Tutor and basic tables, load it into the workspace, and sync row counts.</li>
+</ul>
+
+<hr>
+
+<h2>7. Future Extensions</h2>
+
+<p>
+  The current implementation focuses on safe insertion and validation. Planned
+  extensions include:
+</p>
+<ul>
+  <li>Separate shortcut presets for character assets and world assets.</li>
+  <li>Asset-type detection and automatic shortcut assignment.</li>
+  <li>Logic engine auto-mapping for renamed or missing fields.</li>
+  <li>World physics modules layered on top of the logic engine.</li>
+  <li>Deeper cockpit UI integration for asset management and testing.</li>
+</ul>
+
+</body>
+</html>
