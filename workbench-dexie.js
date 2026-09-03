@@ -419,7 +419,6 @@ function onInsertSmarHamrTutor() {
 
     updateDexieStatus("SmarHamr Tutor inserted successfully.", false);
 }
-
 /* ============================================================================
    Logic Engine Module
    ============================================================================ */
@@ -552,4 +551,74 @@ function onLoadCleanSmarHamrProfile() {
                 { name: "summaries", schema: "hash,threadId", rowCount: 0 },
                 { name: "memories", schema: "++id,[summaryHash+threadId],[characterId+status],[threadId+status],[threadId+index],threadId", rowCount: 0 },
                 { name: "lore", schema: "++id,bookId,bookUrl", rowCount: 0 },
-                { name: "textEmbeddingCache", schema: "++id,textHash,&[textHash+modelName
+                { name: "textEmbeddingCache", schema: "++id,textHash,&[textHash+modelName]", rowCount: 0 },
+                { name: "textCompressionCache", schema: "++id,uncompressedTextHash,&[uncompressedTextHash+modelName+tokenLimit]", rowCount: 0 }
+            ],
+            data: [
+                {
+                    tableName: "characters",
+                    inbound: true,
+                    rows: [characterRow]
+                },
+                {
+                    tableName: "threads",
+                    inbound: true,
+                    rows: [threadRow]
+                },
+                {
+                    tableName: "messages",
+                    inbound: true,
+                    rows: [messageRow]
+                },
+                {
+                    tableName: "misc",
+                    inbound: true,
+                    rows: [
+                        { key: "showInlineReminder", value: "no" },
+                        { key: "userAvatarUrl", value: "" },
+                        { key: "userName", value: "User" },
+                        { key: "userRoleInstruction", value: "" }
+                    ]
+                },
+                {
+                    tableName: "summaries",
+                    inbound: true,
+                    rows: []
+                },
+                {
+                    tableName: "memories",
+                    inbound: true,
+                    rows: []
+                },
+                {
+                    tableName: "lore",
+                    inbound: true,
+                    rows: []
+                },
+                {
+                    tableName: "textEmbeddingCache",
+                    inbound: true,
+                    rows: []
+                },
+                {
+                    tableName: "textCompressionCache",
+                    inbound: true,
+                    rows: []
+                }
+            ]
+        }
+    };
+
+    syncRowCounts(cleanExport);
+
+    window.smarhamrExport = cleanExport;
+    updateCurrentFileName("SmarHamr Clean Profile (in-memory)");
+
+    localStorage.setItem("smarhamrExport", JSON.stringify(cleanExport));
+    localStorage.setItem("smarhamrExportFileName", "smarhamr-clean-profile.json");
+
+    renderDexieWorkspace(cleanExport);
+    validateDexieStructureSafe(cleanExport);
+
+    alert("Clean SmarHamr profile loaded.\nExport it to use in Perchance.");
+}
