@@ -1,5 +1,5 @@
 /* ============================================================================
-   SmarHamr — Dexie Workbench Loader (with Live Validation + Status Line)
+   SmarHamr — Dexie Workbench Loader (with Live Validation + Status Line + Sync)
    ============================================================================ */
 
 window.smarhamrExport = null;
@@ -31,6 +31,28 @@ const REQUIRED_TABLES = [
     "textEmbeddingCache",
     "textCompressionCache"
 ];
+
+/* ---------------------------------------------------------
+   Sync rowCount in tables[] with rows.length in data[]
+--------------------------------------------------------- */
+
+function syncRowCounts() {
+    if (!window.smarhamrExport) return;
+
+    const metaTables = window.smarhamrExport.data.tables;
+    const dataTables = window.smarhamrExport.data.data;
+
+    metaTables.forEach(meta => {
+        const dataEntry = dataTables.find(d => d.tableName === meta.name);
+        if (dataEntry && Array.isArray(dataEntry.rows)) {
+            meta.rowCount = dataEntry.rows.length;
+        }
+    });
+}
+
+/* ---------------------------------------------------------
+   Dexie Structure Validator
+--------------------------------------------------------- */
 
 function validateDexieStructure(exportJson) {
     if (!exportJson ||
@@ -118,6 +140,7 @@ async function handleFileLoad(file) {
     try {
         const data = await loadFile(file);
 
+        syncRowCounts();             // NEW
         validateDexieStructureSafe(data);
 
         window.smarhamrExport = data;
@@ -151,7 +174,10 @@ function renderDexieWorkspace(data) {
             const updated = JSON.parse(editor.value);
             window.smarhamrExport = updated;
             localStorage.setItem("smarhamrExport", JSON.stringify(updated));
+
+            syncRowCounts();          // NEW
             validateDexieStructureSafe(updated);
+
         } catch (err) {
             updateDexieStatus("Dexie Structure: Invalid JSON", true);
         }
@@ -170,6 +196,8 @@ function exportGzipped() {
 
     const prefix = prompt("Enter file prefix (no extension):");
     if (!prefix) return;
+
+    syncRowCounts();                  // NEW
 
     const jsonOneLine = JSON.stringify(window.smarhamrExport);
     const gzData = pako.gzip(jsonOneLine);
@@ -204,6 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             window.smarhamrExport = JSON.parse(saved);
             updateCurrentFileName(savedName || "No file loaded");
+            syncRowCounts();          // NEW
             renderDexieWorkspace(window.smarhamrExport);
             validateDexieStructureSafe(window.smarhamrExport);
         } catch (err) {
@@ -380,9 +409,7 @@ function onInsertSmarHamrTutor() {
     threadsTable.rows.push(threadRow);
     messagesTable.rows.push(messageRow);
 
-    charactersTable.rowCount = charactersTable.rows.length;
-    threadsTable.rowCount = threadsTable.rows.length;
-    messagesTable.rowCount = messagesTable.rows.length;
+    syncRowCounts();                  // NEW
 
     localStorage.setItem("smarhamrExport", JSON.stringify(window.smarhamrExport));
     renderDexieWorkspace(window.smarhamrExport);
@@ -472,14 +499,7 @@ function onLoadCleanSmarHamrProfile() {
         }
     };
 
-    // Ensure rowCount matches rows.length
-    cleanExport.data.tables.forEach(meta => {
-        const dataEntry = cleanExport.data.data.find(d => d.tableName === meta.name);
-        if (dataEntry) {
-            meta.rowCount = Array.isArray(dataEntry.rows) ? dataEntry.rows.length : 0;
-            dataEntry.inbound = true;
-        }
-    });
+    syncRowCounts();                  // NEW
 
     window.smarhamrExport = cleanExport;
     updateCurrentFileName("SmarHamr Clean Profile (in-memory)");
