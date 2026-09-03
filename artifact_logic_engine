@@ -1,0 +1,135 @@
+===========================================
+HYBRID TRISKELE + SYMBIOTIC NODE ENGINE
+===========================================
+
+OVERVIEW:
+The hybrid engine consists of two layers:
+
+1. TRISKELE (Internal Nervous System)
+2. SYMBIOTIC NODE ENGINE (External Influence Network)
+
+Together they create a dynamic, emergent simulation system.
+
+-------------------------------------------
+1. TRISKELE ENGINE (INTERNAL LOGIC)
+-------------------------------------------
+
+Each asset (character, vehicle, environment, group, system, scene) has three spirals:
+
+HAND:
+- Action vector
+- Manipulation, intervention, agency
+- “What the asset DOES”
+
+HEARTH:
+- Stability vector
+- Safety, cohesion, grounding
+- “What keeps the asset CENTERED”
+
+SHADOW:
+- Pressure vector
+- Distortion, threat, entropy
+- “What pushes the asset OFF BALANCE”
+
+These spirals define the asset’s INTERNAL behavioral signature.
+
+Triskele = “This is who the asset IS.”
+
+-------------------------------------------
+2. SYMBIOTIC NODE ENGINE (EXTERNAL LOGIC)
+-------------------------------------------
+
+Assets form TETHERS to other assets.
+
+A tether means:
+“Asset A is currently connected to Asset B.”
+
+Through tethers, traits FLOW between assets.
+
+Examples:
+- A character tethered to a dark environment absorbs Shadow.
+- A vehicle tethered to a skilled pilot absorbs Hearth.
+- A scene tethered to a chaotic crowd absorbs Hand.
+
+Node Engine = “This is who the asset BECOMES in this moment.”
+
+-------------------------------------------
+3. TRAIT FLOW MECHANISM
+-------------------------------------------
+
+When tethered:
+- External spirals influence internal spirals.
+- Influence strength depends on tether intensity.
+- Influence persists until tether breaks.
+
+Example:
+Character enters a Shadow-heavy shaft:
+Character.Shadow += Shaft.Shadow
+Character.Hearth -= Shaft.Shadow
+Character.Hand -= Shaft.Shadow
+
+This creates dynamic state changes.
+
+-------------------------------------------
+4. THEMATIC COLLAPSE (RISK)
+-------------------------------------------
+
+If external influence overwhelms internal spirals:
+- The asset loses its identity.
+- The environment overwrites the character.
+- The character becomes a manifestation of the environment.
+
+This is called:
+THEMATIC COLLAPSE
+
+-------------------------------------------
+5. TETHER OF ORIGIN (ANCHOR)
+-------------------------------------------
+
+To prevent collapse, each asset must have a CORE ANCHOR:
+
+TetherOfOrigin:
+- A persistent identity vector
+- Resists external influence
+- Maintains psychological elasticity
+- Allows recovery after intense tethering
+
+Without it:
+- The system becomes a transformation engine
+With it:
+- The system remains an interaction engine
+
+-------------------------------------------
+6. HYBRID ENGINE SUMMARY
+-------------------------------------------
+
+TRISKELE:
+Internal nervous system
+Defines identity
+Stable, token-efficient
+
+NODE ENGINE:
+External circulatory system
+Defines influence
+Dynamic, emergent
+
+HYBRID:
+Identity + Influence = Behavior
+Stable + Dynamic = Simulation
+
+-------------------------------------------
+7. WHY THIS ENGINE WORKS
+-------------------------------------------
+
+- Token-efficient
+- No personality sheets
+- Assets behave like systems
+- Environments behave like characters
+- Characters evolve naturally
+- Scenes exert pressure
+- Behavior is emergent, not scripted
+- Perfect for Perchance and SmarHamr
+
+===========================================
+END OF ARTIFACT
+===========================================
