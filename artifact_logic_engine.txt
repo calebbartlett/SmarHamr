@@ -177,6 +177,30 @@ Typical workload:
 - 3–6 tethers
 Total user effort: 5–10 short lines of data.
 
+-------------------------------------------
+9. STATE ELASTICITY (STABILIZER)
+-------------------------------------------
+
+State Elasticity ensures that an asset’s identity does not permanently distort under external influence. Each spiral (Hand, Hearth, Shadow) has a baseline identity value and an elasticity coefficient that determines how strongly it returns to that baseline after being pushed by external pressure. This creates temporary transformations rather than permanent overwrites, allowing assets to recover naturally once tethers weaken or break. Elasticity is the primary safeguard against long-term behavioral drift.
+
+-------------------------------------------
+10. SCENE PRESSURE MODULATION (ENVIRONMENTAL CONTROL)
+-------------------------------------------
+
+Scenes exert influence through pressure curves that determine how strongly their spirals affect tethered assets. Pressure exists in three levels: Soft (ambient), Medium (active), and Hard (overwhelming). These levels shift based on proximity, duration, and narrative intensity. Scene Pressure Modulation prevents abrupt or unrealistic changes by allowing environmental influence to rise or fall smoothly, creating natural tension and pacing within the simulation.
+
+-------------------------------------------
+11. INTERACTION MEMORY (SHORT-TERM CONTINUITY)
+-------------------------------------------
+
+Interaction Memory stores short-term traces of recent tether activity, including the last tether, last influence, and last spiral shift. These traces decay over time but provide continuity between scenes, preventing characters from resetting abruptly. Interaction Memory creates behavioral inertia, allowing actions, emotions, and environmental effects to carry forward in a controlled, natural way. This produces emergent arcs without requiring manual tracking.
+
+-------------------------------------------
+12. DUAL-ORIGIN ANCHORING (ADVANCED COLLAPSE PREVENTION)
+-------------------------------------------
+
+Dual-Origin Anchoring gives each asset two stabilizing anchors: Identity Origin (who the asset IS) and Purpose Origin (what the asset SEEKS or DOES). If external influence overwhelms identity, purpose can still pull the asset back from collapse. This two-anchor system provides the strongest protection against thematic collapse, ensuring that even under extreme pressure, assets retain coherence, agency, and psychological elasticity. Dual-Origin Anchoring maintains narrative integrity while allowing deep, transformative interactions.
+
 ===========================================
 END OF ARTIFACT
 ===========================================
