@@ -44,7 +44,6 @@ async function handleFileLoad(file) {
         const data = await loadFile(file);
         window.smarhamrExport = data;
 
-        // Persist for future expansion
         localStorage.setItem("smarhamrExport", JSON.stringify(data));
         localStorage.setItem("smarhamrExportFileName", file.name);
 
@@ -119,7 +118,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (file) handleFileLoad(file);
     });
 
-    // Restore saved export if present
     const saved = localStorage.getItem("smarhamrExport");
     const savedName = localStorage.getItem("smarhamrExportFileName");
 
@@ -133,3 +131,154 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 });
+
+/* ============================================================================
+   Persona ID Namespace (333xx)
+   ============================================================================ */
+
+function getNextPersonaId() {
+    if (!window.smarhamrExport) return 33300;
+
+    const tables = window.smarhamrExport?.data?.data || [];
+    const charactersTable = tables.find(t => t.tableName === "characters");
+    if (!charactersTable) return 33300;
+
+    const ids = charactersTable.rows
+        .map(r => typeof r.id === "number" ? r.id : null)
+        .filter(id => id !== null && id >= 33300);
+
+    if (!ids.length) return 33300;
+    return Math.max(...ids) + 1;
+}
+
+/* ============================================================================
+   Build SmarHamr Tutor Bundle
+   ============================================================================ */
+
+function buildSmarHamrTutorBundle(personaId) {
+    const now = Date.now();
+
+    const characterRow = {
+        name: "SmarHamr Tutor",
+        roleInstruction: "SmarHamr Tutor helps you understand Perchance exports and the SmarHamr Workbench.",
+        modelName: "perchance-ai",
+        temperature: 0.8,
+        maxTokensPerMessage: 500,
+        initialMessages: [
+            {
+                author: "ai",
+                content: "Welcome! This export includes the SmarHamr Tutor.\nVisit https://calebbartlett.github.io/SmarHamr/ for documentation."
+            }
+        ],
+        loreBookUrls: [
+            "https://calebbartlett.github.io/SmarHamr/docs/smarhamr_tutor_lore.txt"
+        ],
+        avatar: { url: "", size: 1, shape: "square" },
+        creationTime: now,
+        lastMessageTime: now,
+        id: personaId,
+        $types: {
+            initialMessages: "arrayNonindexKeys",
+            loreBookUrls: "arrayNonindexKeys"
+        }
+    };
+
+    const threadRow = {
+        name: "SmarHamr Tutor Thread",
+        characterId: personaId,
+        creationTime: now,
+        lastMessageTime: now,
+        lastViewTime: now,
+        modelName: "perchance-ai",
+        id: personaId,
+        $types: {}
+    };
+
+    const messageRow = {
+        threadId: personaId,
+        characterId: personaId,
+        message: "This export was modified by SmarHamr Workbench.",
+        creationTime: now,
+        order: 0,
+        id: personaId,
+        $types: {}
+    };
+
+    return { characterRow, threadRow, messageRow };
+}
+
+/* ============================================================================
+   Insert SmarHamr Tutor
+   ============================================================================ */
+
+function onInsertSmarHamrTutor() {
+    if (!window.smarhamrExport) {
+        alert("Load a Dexie export first.");
+        return;
+    }
+
+    const personaId = getNextPersonaId();
+    const { characterRow, threadRow, messageRow } = buildSmarHamrTutorBundle(personaId);
+
+    const tables = window.smarhamrExport.data.data;
+
+    const charactersTable = tables.find(t => t.tableName === "characters");
+    const threadsTable = tables.find(t => t.tableName === "threads");
+    const messagesTable = tables.find(t => t.tableName === "messages");
+
+    if (!charactersTable || !threadsTable || !messagesTable) {
+        alert("This export does not contain Perchance tables.");
+        return;
+    }
+
+    charactersTable.rows.push(characterRow);
+    threadsTable.rows.push(threadRow);
+    messagesTable.rows.push(messageRow);
+
+    charactersTable.rowCount = charactersTable.rows.length;
+    threadsTable.rowCount = threadsTable.rows.length;
+    messagesTable.rowCount = messagesTable.rows.length;
+
+    localStorage.setItem("smarhamrExport", JSON.stringify(window.smarhamrExport));
+    renderDexieWorkspace(window.smarhamrExport);
+
+    alert("SmarHamr Tutor inserted successfully.");
+}
+
+/* ============================================================================
+   Load Clean SmarHamr Profile
+   ============================================================================ */
+
+function onLoadCleanSmarHamrProfile() {
+    const personaId = 33300;
+    const { characterRow, threadRow, messageRow } = buildSmarHamrTutorBundle(personaId);
+
+    const cleanExport = {
+        formatName: "dexie",
+        formatVersion: 1,
+        data: {
+            databaseName: "chatbot-ui-v1",
+            databaseVersion: 1,
+            tables: [
+                { name: "characters", schema: "++id", rowCount: 1 },
+                { name: "threads", schema: "++id", rowCount: 1 },
+                { name: "messages", schema: "++id", rowCount: 1 }
+            ],
+            data: [
+                { tableName: "characters", inbound: true, rows: [characterRow] },
+                { tableName: "threads", inbound: true, rows: [threadRow] },
+                { tableName: "messages", inbound: true, rows: [messageRow] }
+            ]
+        }
+    };
+
+    window.smarhamrExport = cleanExport;
+    updateCurrentFileName("SmarHamr Clean Profile (in-memory)");
+
+    localStorage.setItem("smarhamrExport", JSON.stringify(cleanExport));
+    localStorage.setItem("smarhamrExportFileName", "smarhamr-clean-profile.json");
+
+    renderDexieWorkspace(cleanExport);
+
+    alert("Clean SmarHamr profile loaded.\nExport it to use in Perchance.");
+}
