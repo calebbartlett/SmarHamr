@@ -421,6 +421,75 @@ function onInsertSmarHamrTutor() {
 }
 
 /* ============================================================================
+   Insert Logic Engine into User Settings → Role
+   ============================================================================ */
+
+function buildLogicEngineModule() {
+    return {
+        logic_engine: {
+            spirals: ["Hand", "Hearth", "Shadow"],
+            pressure_levels: ["Soft", "Medium", "Hard"],
+            tethers: {
+                types: ["stabilizing", "destabilizing", "amplifying", "dampening"]
+            },
+            state_elasticity: {
+                baseline_recovery: true,
+                collapse_vectors: true
+            },
+            interaction_memory: {
+                emotional_residue: true,
+                behavioral_inertia: true
+            },
+            environment_resonance: {
+                fields: ["ambient", "active", "overwhelming"]
+            },
+            adaptive_thresholds: {
+                dynamic_spiral_limits: true
+            }
+        },
+        note: "This logic engine belongs in the USER ROLE. It defines global physics for all worlds and characters."
+    };
+}
+
+function onInsertLogicEngine() {
+    if (!window.smarhamrExport) {
+        alert("Load a Dexie export first.");
+        return;
+    }
+
+    const exportJson = window.smarhamrExport;
+    const miscTable = exportJson.data.data.find(t => t.tableName === "misc");
+
+    if (!miscTable) {
+        alert("This export does not contain a misc table.");
+        return;
+    }
+
+    // Find or create userRoleInstruction row
+    let userRoleRow = miscTable.rows.find(r => r.key === "userRoleInstruction");
+
+    if (!userRoleRow) {
+        userRoleRow = { key: "userRoleInstruction", value: "" };
+        miscTable.rows.push(userRoleRow);
+    }
+
+    // Insert logic engine module
+    const module = buildLogicEngineModule();
+    userRoleRow.value = JSON.stringify(module, null, 2);
+
+    // Sync rowCount
+    syncRowCounts(exportJson);
+
+    // Save + re-render
+    localStorage.setItem("smarhamrExport", JSON.stringify(exportJson));
+    renderDexieWorkspace(exportJson);
+    validateDexieStructureSafe(exportJson);
+
+    alert("Logic Engine inserted into USER ROLE.\n\nThis module belongs in the user role, not in characters or worlds.\nIt defines global physics for all assets.");
+}
+
+
+/* ============================================================================
    Load Clean SmarHamr Profile
    ============================================================================ */
 
