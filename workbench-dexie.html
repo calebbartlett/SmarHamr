@@ -29,6 +29,11 @@
             font-size: 0.95rem;
             opacity: 0.9;
         }
+        #dexieStatus {
+            color: #888;
+            font-size: 0.85rem;
+            margin-left: 20px;
+        }
         #branding {
             color: #eee;
             font-size: 1rem;
@@ -83,7 +88,10 @@
 
     <!-- Top Bar -->
     <div id="topbar">
-        <div id="currentFileName">No file loaded</div>
+        <div style="display:flex; align-items:center;">
+            <div id="currentFileName">No file loaded</div>
+            <div id="dexieStatus">Dexie Structure: OK</div>
+        </div>
         <div id="branding"><b>SmarHamr: Dexie Editor</b> by yggdrasil</div>
     </div>
 
