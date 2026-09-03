@@ -1,5 +1,5 @@
 /* ============================================================================
-   SmarHamr — Dexie Workbench Loader (with Live Validation + Status Line + Sync)
+   SmarHamr — Dexie Workbench Loader (Live Validation + Status Line + Sync Fix)
    ============================================================================ */
 
 window.smarhamrExport = null;
@@ -36,11 +36,11 @@ const REQUIRED_TABLES = [
    Sync rowCount in tables[] with rows.length in data[]
 --------------------------------------------------------- */
 
-function syncRowCounts() {
-    if (!window.smarhamrExport) return;
+function syncRowCounts(exportJson) {
+    if (!exportJson || !exportJson.data) return;
 
-    const metaTables = window.smarhamrExport.data.tables;
-    const dataTables = window.smarhamrExport.data.data;
+    const metaTables = exportJson.data.tables;
+    const dataTables = exportJson.data.data;
 
     metaTables.forEach(meta => {
         const dataEntry = dataTables.find(d => d.tableName === meta.name);
@@ -140,7 +140,7 @@ async function handleFileLoad(file) {
     try {
         const data = await loadFile(file);
 
-        syncRowCounts();             // NEW
+        syncRowCounts(data);                // FIXED
         validateDexieStructureSafe(data);
 
         window.smarhamrExport = data;
@@ -175,7 +175,7 @@ function renderDexieWorkspace(data) {
             window.smarhamrExport = updated;
             localStorage.setItem("smarhamrExport", JSON.stringify(updated));
 
-            syncRowCounts();          // NEW
+            syncRowCounts(updated);         // FIXED
             validateDexieStructureSafe(updated);
 
         } catch (err) {
@@ -197,7 +197,7 @@ function exportGzipped() {
     const prefix = prompt("Enter file prefix (no extension):");
     if (!prefix) return;
 
-    syncRowCounts();                  // NEW
+    syncRowCounts(window.smarhamrExport);   // FIXED
 
     const jsonOneLine = JSON.stringify(window.smarhamrExport);
     const gzData = pako.gzip(jsonOneLine);
@@ -232,9 +232,11 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             window.smarhamrExport = JSON.parse(saved);
             updateCurrentFileName(savedName || "No file loaded");
-            syncRowCounts();          // NEW
+
+            syncRowCounts(window.smarhamrExport);   // FIXED
             renderDexieWorkspace(window.smarhamrExport);
             validateDexieStructureSafe(window.smarhamrExport);
+
         } catch (err) {
             console.warn("Failed to restore saved export:", err);
         }
@@ -409,7 +411,7 @@ function onInsertSmarHamrTutor() {
     threadsTable.rows.push(threadRow);
     messagesTable.rows.push(messageRow);
 
-    syncRowCounts();                  // NEW
+    syncRowCounts(window.smarhamrExport);   // FIXED
 
     localStorage.setItem("smarhamrExport", JSON.stringify(window.smarhamrExport));
     renderDexieWorkspace(window.smarhamrExport);
@@ -499,7 +501,7 @@ function onLoadCleanSmarHamrProfile() {
         }
     };
 
-    syncRowCounts();                  // NEW
+    syncRowCounts(cleanExport);            // FIXED
 
     window.smarhamrExport = cleanExport;
     updateCurrentFileName("SmarHamr Clean Profile (in-memory)");
