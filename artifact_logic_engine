@@ -1,3 +1,4 @@
+artifact_logic_engine
 ===========================================
 HYBRID TRISKELE + SYMBIOTIC NODE ENGINE
 ===========================================
@@ -129,6 +130,52 @@ Stable + Dynamic = Simulation
 - Scenes exert pressure
 - Behavior is emergent, not scripted
 - Perfect for Perchance and SmarHamr
+
+-------------------------------------------
+8. USER WORKLOAD & MAINTENANCE
+-------------------------------------------
+
+The user maintains ONLY three elements:
+
+1. TRISKELE SPIRALS (per asset)
+   - Hand (action)
+   - Hearth (stability)
+   - Shadow (pressure)
+   Expressed as:
+     - short phrases
+     - numeric vectors
+     - thematic tags
+
+2. CORE RESONANCE (identity anchor)
+   - A single concept defining the asset’s baseline identity
+   - Prevents thematic collapse
+   - Supports recovery after influence
+
+3. TETHERS (connections between assets)
+   - Declared simply as:
+       AssetA ↔ AssetB
+   - Engine handles influence flow automatically
+   - Update only when scene changes
+
+Everything else is AUTOMATIC:
+- influence propagation
+- state changes
+- environmental pressure
+- emergent behavior
+- narrative cohesion
+- collapse prevention
+- elasticity recovery
+- scene modulation
+- dynamic arcs
+- continuity
+- influence decay
+- return to baseline
+
+Typical workload:
+- 5 assets → 5 Triskele sets
+- 5 core resonances
+- 3–6 tethers
+Total user effort: 5–10 short lines of data.
 
 ===========================================
 END OF ARTIFACT
