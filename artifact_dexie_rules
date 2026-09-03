@@ -1,0 +1,199 @@
+===========================
+PERCHANCE DEXIE STRUCTURE RULES (CANONICAL)
+===========================
+
+FORMAT:
+formatName: "dexie"
+formatVersion: 1
+
+DATABASE METADATA:
+databaseName: "chatbot-ui-v1"
+databaseVersion: 90
+
+REQUIRED TABLES (MUST appear in BOTH `tables[]` AND `data[]`):
+1. characters
+2. threads
+3. messages
+4. misc
+5. summaries
+6. memories
+7. lore
+8. textEmbeddingCache
+9. textCompressionCache
+
+IF ANY TABLE IS MISSING → IMPORT FAILS.
+
+-------------------------------------------
+TABLE SCHEMAS (MUST MATCH EXACTLY)
+-------------------------------------------
+
+characters:
+"++id,modelName,fitMessagesInContextMethod,uuid,creationTime,lastMessageTime,folderPath"
+
+threads:
+"++id,name,characterId,creationTime,lastMessageTime,lastViewTime,folderPath"
+
+messages:
+"++id,threadId,characterId,creationTime,order"
+
+misc:
+"key"
+
+summaries:
+"hash,threadId"
+
+memories:
+"++id,[summaryHash+threadId],[characterId+status],[threadId+status],[threadId+index],threadId"
+
+lore:
+"++id,bookId,bookUrl"
+
+textEmbeddingCache:
+"++id,textHash,&[textHash+modelName]"
+
+textCompressionCache:
+"++id,uncompressedTextHash,&[uncompressedTextHash+modelName+tokenLimit]"
+
+-------------------------------------------
+REQUIRED ROW FIELDS
+-------------------------------------------
+
+CHARACTERS ROW MUST INCLUDE:
+name
+roleInstruction
+maxParagraphCountPerMessage
+reminderMessage
+generalWritingInstructions
+messageWrapperStyle
+imagePromptPrefix
+imagePromptSuffix
+imagePromptTriggers
+fitMessagesInContextMethod
+autoGenerateMemories
+customCode
+messageInputPlaceholder
+metaTitle
+metaDescription
+metaImage
+modelName
+temperature
+maxTokensPerMessage
+textEmbeddingModelName
+initialMessages
+shortcutButtons
+loreBookUrls
+avatar
+scene
+userCharacter
+systemCharacter
+streamingResponse
+folderPath
+customData
+uuid
+creationTime
+lastMessageTime
+id
+$types (with correct keys)
+
+THREADS ROW MUST INCLUDE:
+name
+characterId
+creationTime
+lastMessageTime
+lastViewTime
+isFav
+userCharacter
+systemCharacter
+character
+modelName
+customCodeWindow
+customData
+folderPath
+loreBookId
+textEmbeddingModelName
+userMessagesSentHistory
+unsentMessageText
+shortcutButtons
+currentSummaryHashChain
+id
+$types
+
+MESSAGES ROW MUST INCLUDE:
+threadId
+message
+characterId
+hiddenFrom
+expectsReply
+creationTime
+variants
+memoryIdBatchesUsed
+loreIdsUsed
+summaryHashUsed
+summariesUsed
+summariesEndingHere
+memoriesEndingHere
+memoryQueriesUsed
+messageIdsUsed
+name
+scene
+avatar
+customData
+wrapperStyle
+order
+instruction
+id
+$types
+
+-------------------------------------------
+$types RULES
+-------------------------------------------
+
+characters $types:
+maxParagraphCountPerMessage: "undef"
+initialMessages: "arrayNonindexKeys"
+shortcutButtons: "arrayNonindexKeys"
+loreBookUrls: "arrayNonindexKeys"
+
+threads $types:
+userMessagesSentHistory: "arrayNonindexKeys"
+shortcutButtons: "arrayNonindexKeys"
+currentSummaryHashChain: "arrayNonindexKeys"
+
+messages $types:
+hiddenFrom: "arrayNonindexKeys"
+expectsReply: "undef"
+variants: "arrayNonindexKeys"
+memoryIdBatchesUsed: "arrayNonindexKeys"
+loreIdsUsed: "arrayNonindexKeys"
+memoryQueriesUsed: "arrayNonindexKeys"
+messageIdsUsed: "arrayNonindexKeys"
+
+-------------------------------------------
+MISC TABLE REQUIRED ROWS
+-------------------------------------------
+
+showInlineReminder: "no"
+userAvatarUrl: ""
+userName: "User"
+userRoleInstruction: ""
+
+-------------------------------------------
+ROWCOUNT RULE
+-------------------------------------------
+rowCount MUST equal rows.length
+
+-------------------------------------------
+INBOUND RULE
+-------------------------------------------
+Every table MUST have:
+inbound: true
+
+-------------------------------------------
+PERSONA ID RULE
+-------------------------------------------
+SmarHamr personas use ID range 33300–33399
+Next persona ID = max(existing >=33300) + 1
+
+===========================
+END OF ARTIFACT
+===========================
