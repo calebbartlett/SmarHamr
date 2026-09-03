@@ -1,0 +1,37 @@
+{
+  "artifact": "logic_engine",
+  "version": "1.0",
+  "engine": {
+    "triskele": {
+      "spirals": ["hand", "hearth", "shadow"],
+      "description": "Internal nervous system defining identity and baseline behavior."
+    },
+    "symbiotic_nodes": {
+      "tether": "AssetA <-> AssetB",
+      "trait_flow": true,
+      "description": "External influence network defining dynamic state changes."
+    },
+    "tether_of_origin": {
+      "required": true,
+      "purpose": "Prevents thematic collapse and maintains identity elasticity."
+    }
+  },
+  "mechanics": {
+    "trait_flow": {
+      "influence_strength": "tether_intensity",
+      "persistence": "until_tether_breaks"
+    },
+    "thematic_collapse": {
+      "risk": true,
+      "condition": "external_influence_overwhelms_internal_spirals"
+    }
+  },
+  "user_workload": {
+    "maintains": [
+      "triskele_spirals",
+      "core_resonance",
+      "tethers"
+    ],
+    "effort": "5-10 short lines per scene"
+  }
+}
