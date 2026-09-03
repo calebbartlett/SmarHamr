@@ -140,7 +140,7 @@ async function handleFileLoad(file) {
     try {
         const data = await loadFile(file);
 
-        syncRowCounts(data);                // FIXED
+        syncRowCounts(data);
         validateDexieStructureSafe(data);
 
         window.smarhamrExport = data;
@@ -175,7 +175,7 @@ function renderDexieWorkspace(data) {
             window.smarhamrExport = updated;
             localStorage.setItem("smarhamrExport", JSON.stringify(updated));
 
-            syncRowCounts(updated);         // FIXED
+            syncRowCounts(updated);
             validateDexieStructureSafe(updated);
 
         } catch (err) {
@@ -197,7 +197,7 @@ function exportGzipped() {
     const prefix = prompt("Enter file prefix (no extension):");
     if (!prefix) return;
 
-    syncRowCounts(window.smarhamrExport);   // FIXED
+    syncRowCounts(window.smarhamrExport);
 
     const jsonOneLine = JSON.stringify(window.smarhamrExport);
     const gzData = pako.gzip(jsonOneLine);
@@ -233,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
             window.smarhamrExport = JSON.parse(saved);
             updateCurrentFileName(savedName || "No file loaded");
 
-            syncRowCounts(window.smarhamrExport);   // FIXED
+            syncRowCounts(window.smarhamrExport);
             renderDexieWorkspace(window.smarhamrExport);
             validateDexieStructureSafe(window.smarhamrExport);
 
@@ -242,7 +242,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 });
-
 /* ============================================================================
    Persona ID Namespace (333xx)
    ============================================================================ */
@@ -411,7 +410,7 @@ function onInsertSmarHamrTutor() {
     threadsTable.rows.push(threadRow);
     messagesTable.rows.push(messageRow);
 
-    syncRowCounts(window.smarhamrExport);   // FIXED
+    syncRowCounts(window.smarhamrExport);
 
     localStorage.setItem("smarhamrExport", JSON.stringify(window.smarhamrExport));
     renderDexieWorkspace(window.smarhamrExport);
@@ -419,8 +418,9 @@ function onInsertSmarHamrTutor() {
 
     alert("SmarHamr Tutor inserted successfully.");
 }
+
 /* ============================================================================
-   Insert Logic Engine into User Settings → Role (marker-based misc row)
+   Insert Logic Engine (append to misc.userRoleInstruction)
    ============================================================================ */
 
 function buildLogicEngineModule() {
@@ -457,41 +457,37 @@ function onInsertLogicEngine() {
     }
 
     const exportJson = window.smarhamrExport;
-    const miscTable = exportJson.data.data.find(t => t.tableName === "misc");
 
+    const miscTable = exportJson.data.data.find(t => t.tableName === "misc");
     if (!miscTable) {
         alert("This export does not contain a misc table.");
         return;
     }
 
-    // Find the specific userRoleInstruction row with the unique marker
-    let userRoleRow = miscTable.rows.find(
-        r => r.key === "userRoleInstruction" &&
-             typeof r.value === "string" &&
-             r.value.includes("Insert Logic Engine here. 118175")
-    );
+    let userRoleRow = miscTable.rows.find(r => r.key === "userRoleInstruction");
 
     if (!userRoleRow) {
-        alert("Target userRoleInstruction row with marker not found.");
-        return;
+        userRoleRow = { key: "userRoleInstruction", value: "" };
+        miscTable.rows.push(userRoleRow);
     }
 
-    // Insert logic engine module
     const module = buildLogicEngineModule();
-    userRoleRow.value = JSON.stringify(module, null, 2);
 
-    // Sync rowCount
+    const existing = userRoleRow.value || "";
+
+    userRoleRow.value =
+        existing +
+        "\n\n======== LOGIC ENGINE GOES HERE ========\n\n" +
+        JSON.stringify(module, null, 2);
+
     syncRowCounts(exportJson);
 
-    // Save + re-render
     localStorage.setItem("smarhamrExport", JSON.stringify(exportJson));
     renderDexieWorkspace(exportJson);
     validateDexieStructureSafe(exportJson);
 
-    alert("Logic Engine inserted into USER ROLE (misc.userRoleInstruction).\n\nThis module belongs in the user role, not in characters or worlds.\nIt defines global physics for all assets.");
+    alert("Logic Engine appended to misc.userRoleInstruction.");
 }
-
-
 /* ============================================================================
    Load Clean SmarHamr Profile
    ============================================================================ */
@@ -541,7 +537,7 @@ function onLoadCleanSmarHamrProfile() {
                         { key: "showInlineReminder", value: "no" },
                         { key: "userAvatarUrl", value: "" },
                         { key: "userName", value: "User" },
-                        { key: "userRoleInstruction", value: "Insert Logic Engine here. 118175" }
+                        { key: "userRoleInstruction", value: "" }
                     ]
                 },
                 {
