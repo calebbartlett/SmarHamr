@@ -2,82 +2,112 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>SmarHamr Dexie Workbench</title>
+    <title>SmarHamr Dexie Editor</title>
 
     <link rel="stylesheet" href="smarhamr-ui.css">
+
+    <!-- Pako for gzip/ungzip -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+
+    <!-- Dexie Loader / Editor Logic -->
     <script src="workbench-dexie.js"></script>
+
+    <style>
+        #topbar {
+            height: 40px;
+            border-bottom: 1px solid #444;
+            padding: 10px;
+            font-size: 1.1rem;
+            color: #eee;
+            background: #111;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #currentFileName {
+            color: #ccc;
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+        #branding {
+            color: #eee;
+            font-size: 1rem;
+            opacity: 0.85;
+        }
+
+        #dexieEditor {
+            font-family: monospace;
+            background: #111;
+            color: #eee;
+            border: 1px solid #444;
+            padding: 10px;
+            resize: none;
+            width: 100%;
+            height: calc(100vh - 140px);
+        }
+        .button-small {
+            padding: 6px 12px;
+            margin: 4px;
+            background: #222;
+            border: 1px solid #555;
+            color: #eee;
+            cursor: pointer;
+        }
+        .button-small:hover {
+            background: #333;
+        }
+        #loaderToolbox {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #444;
+        }
+        #layout {
+            display: flex;
+            height: calc(100vh - 40px);
+        }
+        .left-nav {
+            width: 220px;
+            border-right: 1px solid #444;
+            padding: 10px;
+            overflow-y: auto;
+        }
+        .workspace {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+        }
+    </style>
 </head>
+
 <body>
 
+    <!-- Top Bar -->
     <div id="topbar">
-        <div id="topbar-left">
-            <span id="currentFileName">No file loaded</span>
-        </div>
-        <div id="topbar-center">
-            <button class="topbar-button active">Dexie Editor</button>
-        </div>
-        <div id="topbar-right">
-            SmarHamr Workbench
-        </div>
+        <div id="currentFileName">No file loaded</div>
+        <div id="branding"><b>SmarHamr: Dexie Editor</b> by yggdrasil</div>
     </div>
 
     <div id="layout">
 
+        <!-- Left Navigation -->
         <div class="left-nav">
-            <h2>Dexie Loader</h2>
-            <div class="panel">
-                <button class="button mb-10" onclick="document.getElementById('workbenchFileInput').click()">Load File</button>
-                <button class="button" onclick="exportGzipped()">Export</button>
+
+            <!-- Loader Toolbox -->
+            <div id="loaderToolbox">
+                <button class="button-small" onclick="document.getElementById('workbenchFileInput').click()">Load File</button>
+                <button class="button-small" onclick="exportGzipped()">Export</button>
+
                 <input type="file" id="workbenchFileInput"
                        accept=".json,.gz,.json.gz"
                        style="display:none;">
             </div>
 
-            <h2 class="mt-20">Table & Row</h2>
-            <div class="panel">
-                <div class="panel-header">Table</div>
-                <select id="tableSelect" onchange="onTableSelected()">
-                    <option value="">-- Select Table --</option>
-                </select>
-
-                <div class="panel-header mt-10">Row</div>
-                <select id="rowSelect" onchange="onRowSelected()">
-                    <option value="">-- Select Row --</option>
-                </select>
-            </div>
-
-            <h2 class="mt-20">Advanced Tools</h2>
-            <div class="panel">
-                <div class="panel-header">Persona & Profile</div>
-
-                <button class="button mb-10"
-                        onclick="onLoadCleanSmarHamrProfile()">
-                    Load Clean SmarHamr Profile
-                </button>
-
-                <button class="button"
-                        onclick="onInsertSmarHamrTutor()">
-                    Insert SmarHamr Tutor
-                </button>
-
-                <p class="mt-10" style="font-size:0.85rem;color:var(--text-dim);">
-                    Uses ID namespace starting at <code>33300</code> so user data stays safe.
-                </p>
-            </div>
         </div>
 
+        <!-- Workspace -->
         <div class="workspace">
-            <div class="panel">
-                <div class="panel-header">Dexie JSON</div>
-                <textarea id="dexieEditor"
-                          placeholder="Load a Dexie JSON or JSON.GZ file to begin."></textarea>
-            </div>
-
-            <div class="panel" id="rowEditorPanel" style="display:none;">
-                <div class="panel-header">Row Editor</div>
-                <textarea id="rowEditor"
-                          placeholder="Select a table and row to edit its JSON."></textarea>
+            <div id="dexieWorkspace">
+                <p style="color:#888;">Load a Dexie JSON or JSON.GZ file to begin.</p>
             </div>
         </div>
 
