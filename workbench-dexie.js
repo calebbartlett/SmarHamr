@@ -2,7 +2,7 @@
    SmarHamr — Dexie Workbench Loader (Simple, Stable, Filename-aware)
    ============================================================================ */
 
-window.smarhamrExport = null;   // global export object
+window.smarhamrExport = null;
 window.smarhamrCurrentFileName = "No file loaded";
 
 /* ---------------------------------------------------------
@@ -152,7 +152,7 @@ function getNextPersonaId() {
 }
 
 /* ============================================================================
-   Build SmarHamr Tutor Bundle
+   Build SmarHamr Tutor Bundle (Perchance-accurate, summarizeOld, auto memories)
    ============================================================================ */
 
 function buildSmarHamrTutorBundle(personaId) {
@@ -161,24 +161,47 @@ function buildSmarHamrTutorBundle(personaId) {
     const characterRow = {
         name: "SmarHamr Tutor",
         roleInstruction: "SmarHamr Tutor helps you understand Perchance exports and the SmarHamr Workbench.",
+        maxParagraphCountPerMessage: 0,
+        reminderMessage: "",
+        generalWritingInstructions: "",
+        messageWrapperStyle: "",
+        imagePromptPrefix: "",
+        imagePromptSuffix: "",
+        imagePromptTriggers: "",
+        fitMessagesInContextMethod: "summarizeOld",
+        autoGenerateMemories: "auto",
+        customCode: "",
+        messageInputPlaceholder: "",
+        metaTitle: "",
+        metaDescription: "",
+        metaImage: "",
         modelName: "perchance-ai",
         temperature: 0.8,
         maxTokensPerMessage: 500,
+        textEmbeddingModelName: "Xenova/bge-base-en-v1.5",
         initialMessages: [
             {
                 author: "ai",
                 content: "Welcome! This export includes the SmarHamr Tutor.\nVisit https://calebbartlett.github.io/SmarHamr/ for documentation."
             }
         ],
-        loreBookUrls: [
-            "https://calebbartlett.github.io/SmarHamr/docs/smarhamr_tutor_lore.txt"
-        ],
+        shortcutButtons: [],
+        loreBookUrls: [],
         avatar: { url: "", size: 1, shape: "square" },
+        scene: { background: { url: "" }, music: { url: "" } },
+        userCharacter: { avatar: {} },
+        systemCharacter: { avatar: {} },
+        streamingResponse: true,
+        folderPath: "",
+        customData: {},
+        uuid: null,
         creationTime: now,
         lastMessageTime: now,
         id: personaId,
         $types: {
+            maxParagraphCountPerMessage: "undef",
             initialMessages: "arrayNonindexKeys",
+            shortcutButtons: "arrayNonindexKeys",
             loreBookUrls: "arrayNonindexKeys"
         }
     };
@@ -189,26 +212,68 @@ function buildSmarHamrTutorBundle(personaId) {
         creationTime: now,
         lastMessageTime: now,
         lastViewTime: now,
+        isFav: false,
+        userCharacter: { avatar: {} },
+        systemCharacter: { avatar: {} },
+        character: { avatar: {} },
         modelName: "perchance-ai",
+        customCodeWindow: { visible: false, width: null },
+        customData: {},
+        folderPath: "",
+        loreBookId: 0,
+        textEmbeddingModelName: "Xenova/bge-base-en-v1.5",
+        userMessagesSentHistory: [],
+        unsentMessageText: "",
+        shortcutButtons: [],
+        currentSummaryHashChain: [],
         id: personaId,
-        $types: {}
+        $types: {
+            userMessagesSentHistory: "arrayNonindexKeys",
+            shortcutButtons: "arrayNonindexKeys",
+            currentSummaryHashChain: "arrayNonindexKeys"
+        }
     };
 
     const messageRow = {
         threadId: personaId,
+        message: "This export was modified by SmarHamr Workbench.\nVisit https://calebbartlett.github.io/SmarHamr/ for docs and tools.",
         characterId: personaId,
-        message: "This export was modified by SmarHamr Workbench.",
+        hiddenFrom: [],
+        expectsReply: 0,
         creationTime: now,
+        variants: [null],
+        memoryIdBatchesUsed: [],
+        loreIdsUsed: [],
+        summaryHashUsed: null,
+        summariesUsed: null,
+        summariesEndingHere: null,
+        memoriesEndingHere: null,
+        memoryQueriesUsed: [],
+        messageIdsUsed: [],
+        name: null,
+        scene: null,
+        avatar: {},
+        customData: {},
+        wrapperStyle: "",
         order: 0,
+        instruction: null,
         id: personaId,
-        $types: {}
+        $types: {
+            hiddenFrom: "arrayNonindexKeys",
+            expectsReply: "undef",
+            variants: "arrayNonindexKeys",
+            memoryIdBatchesUsed: "arrayNonindexKeys",
+            loreIdsUsed: "arrayNonindexKeys",
+            memoryQueriesUsed: "arrayNonindexKeys",
+            messageIdsUsed: "arrayNonindexKeys"
+        }
     };
 
     return { characterRow, threadRow, messageRow };
 }
 
 /* ============================================================================
-   Insert SmarHamr Tutor
+   Insert SmarHamr Tutor (Perchance-compatible)
    ============================================================================ */
 
 function onInsertSmarHamrTutor() {
@@ -246,11 +311,12 @@ function onInsertSmarHamrTutor() {
 }
 
 /* ============================================================================
-   Load Clean SmarHamr Profile
+   Load Clean SmarHamr Profile (Perchance-compatible)
    ============================================================================ */
 
 function onLoadCleanSmarHamrProfile() {
     const personaId = 33300;
+    const now = Date.now();
     const { characterRow, threadRow, messageRow } = buildSmarHamrTutorBundle(personaId);
 
     const cleanExport = {
@@ -258,16 +324,69 @@ function onLoadCleanSmarHamrProfile() {
         formatVersion: 1,
         data: {
             databaseName: "chatbot-ui-v1",
-            databaseVersion: 1,
+            databaseVersion: 90,
             tables: [
-                { name: "characters", schema: "++id", rowCount: 1 },
-                { name: "threads", schema: "++id", rowCount: 1 },
-                { name: "messages", schema: "++id", rowCount: 1 }
+                { name: "characters", schema: "++id,modelName,fitMessagesInContextMethod,uuid,creationTime,lastMessageTime,folderPath", rowCount: 1 },
+                { name: "threads", schema: "++id,name,characterId,creationTime,lastMessageTime,lastViewTime,folderPath", rowCount: 1 },
+                { name: "messages", schema: "++id,threadId,characterId,creationTime,order", rowCount: 1 },
+                { name: "misc", schema: "key", rowCount: 4 },
+                { name: "summaries", schema: "hash,threadId", rowCount: 0 },
+                { name: "memories", schema: "++id,[summaryHash+threadId],[characterId+status],[threadId+status],[threadId+index],threadId", rowCount: 0 },
+                { name: "lore", schema: "++id,bookId,bookUrl", rowCount: 0 },
+                { name: "textEmbeddingCache", schema: "++id,textHash,&[textHash+modelName]", rowCount: 0 },
+                { name: "textCompressionCache", schema: "++id,uncompressedTextHash,&[uncompressedTextHash+modelName+tokenLimit]", rowCount: 0 }
             ],
             data: [
-                { tableName: "characters", inbound: true, rows: [characterRow] },
-                { tableName: "threads", inbound: true, rows: [threadRow] },
-                { tableName: "messages", inbound: true, rows: [messageRow] }
+                {
+                    tableName: "characters",
+                    inbound: true,
+                    rows: [characterRow]
+                },
+                {
+                    tableName: "threads",
+                    inbound: true,
+                    rows: [threadRow]
+                },
+                {
+                    tableName: "messages",
+                    inbound: true,
+                    rows: [messageRow]
+                },
+                {
+                    tableName: "misc",
+                    inbound: true,
+                    rows: [
+                        { key: "showInlineReminder", value: "no" },
+                        { key: "userAvatarUrl", value: "" },
+                        { key: "userName", value: "User" },
+                        { key: "userRoleInstruction", value: "" }
+                    ]
+                },
+                {
+                    tableName: "summaries",
+                    inbound: true,
+                    rows: []
+                },
+                {
+                    tableName: "memories",
+                    inbound: true,
+                    rows: []
+                },
+                {
+                    tableName: "lore",
+                    inbound: true,
+                    rows: []
+                },
+                {
+                    tableName: "textEmbeddingCache",
+                    inbound: true,
+                    rows: []
+                },
+                {
+                    tableName: "textCompressionCache",
+                    inbound: true,
+                    rows: []
+                }
             ]
         }
     };
