@@ -1,6 +1,6 @@
 {
   "artifact": "logic_engine",
-  "version": "1.0",
+  "version": "2.0",
   "engine": {
     "triskele": {
       "spirals": ["hand", "hearth", "shadow"],
@@ -14,6 +14,11 @@
     "tether_of_origin": {
       "required": true,
       "purpose": "Prevents thematic collapse and maintains identity elasticity."
+    },
+    "dual_origin_anchor": {
+      "identity_origin": "Defines who the asset IS.",
+      "purpose_origin": "Defines what the asset SEEKS or DOES.",
+      "description": "Two-anchor system preventing collapse even under extreme external influence."
     }
   },
   "mechanics": {
@@ -24,6 +29,21 @@
     "thematic_collapse": {
       "risk": true,
       "condition": "external_influence_overwhelms_internal_spirals"
+    },
+    "state_elasticity": {
+      "baseline": "asset_identity_vector",
+      "coefficient": "elasticity_strength",
+      "description": "Automatic return-to-baseline force preventing permanent distortion."
+    },
+    "scene_pressure": {
+      "levels": ["soft", "medium", "hard"],
+      "modulation_curve": "pressure varies by proximity, duration, and narrative intensity",
+      "description": "Controls how strongly environments exert influence over time."
+    },
+    "interaction_memory": {
+      "stores": ["last_tether", "last_influence", "last_spiral_shift"],
+      "decay": "influence fades over time",
+      "description": "Short-term behavioral inertia creating continuity between scenes."
     }
   },
   "user_workload": {
@@ -32,6 +52,7 @@
       "core_resonance",
       "tethers"
     ],
-    "effort": "5-10 short lines per scene"
+    "effort": "5-10 short lines per scene",
+    "description": "Minimal user input; engine handles all dynamic behavior automatically."
   }
 }
