@@ -262,6 +262,41 @@ function getNextPersonaId() {
 }
 
 /* ============================================================================
+   Tutor Shortcut Pack
+   ============================================================================ */
+
+const TUTOR_SHORTCUTS = [
+    {
+        name: "🗣️ Explain",
+        message: "/ai Explain this step-by-step.",
+        insertionType: "replace",
+        autoSend: true,
+        clearAfterSend: false
+    },
+    {
+        name: "📘 Docs",
+        message: "/ai Show SmarHamr documentation.",
+        insertionType: "replace",
+        autoSend: true,
+        clearAfterSend: false
+    },
+    {
+        name: "🔍 Inspect",
+        message: "/ai Inspect this export and describe issues.",
+        insertionType: "replace",
+        autoSend: true,
+        clearAfterSend: false
+    },
+    {
+        name: "🧪 Validate",
+        message: "/ai Validate this export.",
+        insertionType: "replace",
+        autoSend: true,
+        clearAfterSend: false
+    }
+];
+
+/* ============================================================================
    Build SmarHamr Tutor Bundle
    ============================================================================ */
 
@@ -295,7 +330,7 @@ function buildSmarHamrTutorBundle(personaId) {
                 content: "Welcome! This export includes the SmarHamr Tutor.\nVisit https://calebbartlett.github.io/SmarHamr/ for documentation."
             }
         ],
-        shortcutButtons: [],
+        shortcutButtons: TUTOR_SHORTCUTS,
         loreBookUrls: [],
         avatar: { url: "", size: 1, shape: "square" },
         scene: { background: { url: "" }, music: { url: "" } },
@@ -334,7 +369,7 @@ function buildSmarHamrTutorBundle(personaId) {
         textEmbeddingModelName: "Xenova/bge-base-en-v1.5",
         userMessagesSentHistory: [],
         unsentMessageText: "",
-        shortcutButtons: [],
+        shortcutButtons: TUTOR_SHORTCUTS,
         currentSummaryHashChain: [],
         id: personaId,
         $types: {
@@ -582,3 +617,4 @@ function onLoadCleanSmarHamrProfile() {
 
     alert("Clean SmarHamr profile loaded.\nExport it to use in Perchance.");
 }
+
