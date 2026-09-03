@@ -56,3 +56,43 @@
     "description": "Minimal user input; engine handles all dynamic behavior automatically."
   }
 }
+{
+  "role": "Narrative Logic Engine Root USER SETTINGS → ROLE - GLOBAL LOGIC ENGINE",
+  "logic_engine": {
+    "spirals": ["Hand", "Hearth", "Shadow"],
+    "pressure_levels": ["Soft", "Medium", "Hard"],
+    "tethers": {
+      "types": ["stabilizing", "destabilizing", "amplifying", "dampening"]
+    },
+    "state_elasticity": {
+      "baseline_recovery": true,
+      "collapse_vectors": true
+    },
+    "interaction_memory": {
+      "emotional_residue": true,
+      "behavioral_inertia": true
+    },
+    "environment_resonance": {
+      "fields": ["ambient", "active", "overwhelming"]
+    },
+    "adaptive_thresholds": {
+      "dynamic_spiral_limits": true
+    }
+  }
+}
+
+{
+  "role": "World Logic Layer - for World Asset",
+  "logic_engine_overrides": {
+    "environment_resonance": {
+      "fields": ["ambient", "active", "overwhelming"],
+      "world_specific_modifiers": true
+    },
+    "pressure_levels": ["Soft", "Medium", "Hard", "Extreme"],
+    "tethers": {
+      "types": ["stabilizing", "destabilizing", "amplifying", "dampening"],
+      "world_specific_polarity": true
+    }
+  }
+}
+
