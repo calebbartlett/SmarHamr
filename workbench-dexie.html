@@ -9,6 +9,10 @@
     <!-- Pako for gzip/ungzip -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
 
+    <!-- Validator + Cleaner Modules -->
+    <script src="dexie-validator.js"></script>
+    <script src="dexie-cleaner.js"></script>
+
     <!-- Dexie Loader / Editor Logic -->
     <script src="workbench-dexie.js"></script>
 
@@ -81,6 +85,23 @@
             padding: 10px;
             overflow-y: auto;
         }
+
+        /* Validator panel */
+        #dexieValidationPanel {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #444;
+        }
+        #dexieIssueStatus {
+            color: #ccc;
+            font-size: 0.85rem;
+            padding: 6px 0;
+        }
+        #dexieFixResult {
+            color: #888;
+            font-size: 0.8rem;
+            margin-top: 6px;
+        }
     </style>
 </head>
 
@@ -103,14 +124,14 @@
             <!-- Loader Toolbox -->
             <div id="loaderToolbox">
                 <button class="button-small" onclick="document.getElementById('workbenchFileInput').click()">Load File</button>
-                <button class="button-small" onclick="exportGzipped()">Export</button>
+                <button class="button-small" onclick="onDexieExportRequested()">Export</button>
 
                 <input type="file" id="workbenchFileInput"
                        accept=".json,.gz,.json.gz"
                        style="display:none;">
             </div>
 
-            <!-- Advanced Tools (Bottom of Left Nav) -->
+            <!-- Advanced Tools -->
             <div id="advancedTools" style="margin-top:20px; padding-top:10px; border-top:1px solid #444;">
                 <h3 style="color:#eee; font-size:1rem; margin-bottom:10px;">Advanced Tools</h3>
 
@@ -121,9 +142,11 @@
                 <button class="button-small" onclick="onInsertSmarHamrTutor()">
                     Insert SmarHamr Tutor
                 </button>
+
                 <button class="button-small" onclick="onInsertLogicEngine()">
                     Insert Logic Engine
                 </button>
+
                 <p style="color:#888; font-size:0.8rem; margin-top:10px;">
                     Persona IDs start at <b>33300</b> to avoid collisions.
                 </p>
@@ -135,6 +158,17 @@
         <div class="workspace">
             <div id="dexieWorkspace">
                 <p style="color:#888;">Load a Dexie JSON or JSON.GZ file to begin.</p>
+            </div>
+
+            <!-- Validator + Fix-All Panel -->
+            <div id="dexieValidationPanel">
+                <div id="dexieIssueStatus">No issues detected.</div>
+
+                <button class="button-small" onclick="runFixAllOnCurrentExport()">
+                    Fix All Issues
+                </button>
+
+                <div id="dexieFixResult"></div>
             </div>
         </div>
 
