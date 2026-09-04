@@ -2,149 +2,96 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>SmarHamr Dexie Editor</title>
+    <title>Workbench — Dexie Editor</title>
 
     <link rel="stylesheet" href="smarhamr-ui.css">
+    <script src="smarhamr-workbench-ui.js"></script>
 
-    <!-- Pako for gzip/ungzip -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+    <!-- Validator + Cleaner Modules -->
+    <script src="dexie-validator.js"></script>
+    <script src="dexie-cleaner.js"></script>
 
-    <!-- Dexie Loader / Editor Logic -->
+    <!-- Main Dexie Workbench Logic -->
     <script src="workbench-dexie.js"></script>
 
     <style>
-        #topbar {
-            height: 40px;
-            border-bottom: 1px solid #444;
+        #dexieWorkspace {
+            width: 100%;
+            height: 500px;
+            font-family: monospace;
+            font-size: 14px;
             padding: 10px;
-            font-size: 1.1rem;
-            color: #eee;
-            background: #111;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        #currentFileName {
-            color: #ccc;
-            font-size: 0.95rem;
-            opacity: 0.9;
-        }
-        #dexieStatus {
-            color: #888;
-            font-size: 0.85rem;
-            margin-left: 20px;
-        }
-        #branding {
-            color: #eee;
-            font-size: 1rem;
-            opacity: 0.85;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: #fafafa;
+            resize: vertical;
         }
 
-        #dexieEditor {
-            font-family: monospace;
-            background: #111;
-            color: #eee;
-            border: 1px solid #444;
+        #dexie-validation-panel {
+            margin-top: 12px;
             padding: 10px;
-            resize: none;
-            width: 100%;
-            height: calc(100vh - 140px);
+            background: #f7f7f7;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
         }
-        .button-small {
+
+        #dexie-fixall-btn {
+            margin-top: 8px;
             padding: 6px 12px;
-            margin: 4px;
-            background: #222;
-            border: 1px solid #555;
-            color: #eee;
+            font-size: 14px;
             cursor: pointer;
-        }
-        .button-small:hover {
-            background: #333;
-        }
-        #loaderToolbox {
-            padding: 10px;
-            text-align: center;
-            border-bottom: 1px solid #444;
-        }
-        #layout {
-            display: flex;
-            height: calc(100vh - 40px);
-        }
-        .left-nav {
-            width: 220px;
-            border-right: 1px solid #444;
-            padding: 10px;
-            overflow-y: auto;
-        }
-        .workspace {
-            flex: 1;
-            padding: 10px;
-            overflow-y: auto;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Top Bar -->
-    <div id="topbar">
-        <div style="display:flex; align-items:center;">
-            <div id="currentFileName">No file loaded</div>
-            <div id="dexieStatus">Dexie Structure: OK</div>
-        </div>
-        <div id="branding"><b>SmarHamr: Dexie Editor</b> by yggdrasil</div>
-    </div>
+    <!-- Shared Top Bar -->
+    <div id="topbar"></div>
 
     <div id="layout">
 
         <!-- Left Navigation -->
         <div class="left-nav">
+            <div id="loaderToolbox"></div>
 
-            <!-- Loader Toolbox -->
-            <div id="loaderToolbox">
-                <button class="button-small" onclick="document.getElementById('workbenchFileInput').click()">Load File</button>
-                <button class="button-small" onclick="exportGzipped()">Export</button>
-
-                <input type="file" id="workbenchFileInput"
-                       accept=".json,.gz,.json.gz"
-                       style="display:none;">
-            </div>
-
-            <!-- Advanced Tools (Bottom of Left Nav) -->
-            <div id="advancedTools" style="margin-top:20px; padding-top:10px; border-top:1px solid #444;">
-                <h3 style="color:#eee; font-size:1rem; margin-bottom:10px;">Advanced Tools</h3>
-
-                <button class="button-small" onclick="onLoadCleanSmarHamrProfile()">
-                    Load Clean SmarHamr Dexie
-                </button>
-
-                <button class="button-small" onclick="onInsertSmarHamrTutor()">
-                    Insert SmarHamr Tutor
-                </button>
-                <button class="button-small" onclick="onInsertLogicEngine()">
-                    Insert Logic Engine
-                </button>
-                <p style="color:#888; font-size:0.8rem; margin-top:10px;">
-                    Persona IDs start at <b>33300</b> to avoid collisions.
-                </p>
-            </div>
-
+            <h2>Tables</h2>
+            <div id="dexieTableList"></div>
         </div>
 
         <!-- Workspace -->
         <div class="workspace">
-            <div id="dexieWorkspace">
-                <p style="color:#888;">Load a Dexie JSON or JSON.GZ file to begin.</p>
+            <div class="panel">
+                <div class="panel-header">Dexie Table Editor</div>
+
+                <!-- Main JSON Workspace -->
+                <textarea id="dexieWorkspace"></textarea>
+
+                <!-- Validator + Cleaner Panel -->
+                <div id="dexie-validation-panel">
+                    <div id="dexie-status">Ready.</div>
+
+                    <button id="dexie-fixall-btn">
+                        Fix All Issues
+                    </button>
+                </div>
+
             </div>
         </div>
-        <div id="dexie-status" style="padding:6px; font-size:14px;">
-          Ready.
-        </div>
 
-        <button onclick="runFixAllOnCurrentExport()">
-         Fix All Issues
-        </button>
     </div>
+
+    <!-- Clipboard -->
+    <div id="clipboardTab">Clipboard</div>
+    <div id="clipboardPanel">
+        <textarea id="clipboardText"></textarea>
+    </div>
+
+    <script>
+        smarhamrCurrentMode = "dexie";
+        initTopBar();
+    </script>
 
 </body>
 </html>
