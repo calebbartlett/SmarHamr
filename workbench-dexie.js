@@ -1,620 +1,373 @@
 /* ============================================================================
-   SmarHamr — Dexie Workbench Loader (Live Validation + Status Line + Sync Fix)
+   SmarHamr Workbench — Dexie Editor (Integrated with Validator + Cleaner)
    ============================================================================ */
 
 window.smarhamrExport = null;
-window.smarhamrCurrentFileName = "No file loaded";
 
 /* ---------------------------------------------------------
-   Status Line Update
+   Update topbar status (Dexie Structure: OK)
 --------------------------------------------------------- */
-
-function updateDexieStatus(message, isError = false) {
+function updateTopbarStatus(msg, color = "#888") {
     const el = document.getElementById("dexieStatus");
-    if (!el) return;
-    el.textContent = message;
-    el.style.color = isError ? "#ff6666" : "#88cc88";
+    if (el) {
+        el.textContent = msg;
+        el.style.color = color;
+    }
 }
 
 /* ---------------------------------------------------------
-   Canonical Dexie Structure Rules
+   Update issue status (below workspace)
 --------------------------------------------------------- */
+function updateIssueStatus(level, message) {
+    const el = document.getElementById("dexieIssueStatus");
+    if (!el) return;
 
-const REQUIRED_TABLES = [
-    "characters",
-    "threads",
-    "messages",
-    "misc",
-    "summaries",
-    "memories",
-    "lore",
-    "textEmbeddingCache",
-    "textCompressionCache"
-];
+    let color = "#ccc";
+    if (level === "Fatal") color = "#ff5555";
+    else if (level === "Warning") color = "#ffaa33";
+    else if (level === "Informational") color = "#88cc88";
+
+    el.style.color = color;
+    el.textContent = `${level}: ${message}`;
+}
 
 /* ---------------------------------------------------------
-   Sync rowCount in tables[] with rows.length in data[]
+   Sync rowCounts after modifications
 --------------------------------------------------------- */
-
 function syncRowCounts(exportJson) {
-    if (!exportJson || !exportJson.data) return;
-
     const metaTables = exportJson.data.tables;
     const dataTables = exportJson.data.data;
 
-    metaTables.forEach(meta => {
-        const dataEntry = dataTables.find(d => d.tableName === meta.name);
-        if (dataEntry && Array.isArray(dataEntry.rows)) {
-            meta.rowCount = dataEntry.rows.length;
+    for (const meta of metaTables) {
+        const data = dataTables.find(t => t.tableName === meta.name);
+        if (data) {
+            meta.rowCount = data.rows.length;
         }
-    });
+    }
 }
 
 /* ---------------------------------------------------------
-   Dexie Structure Validator
+   Load Dexie JSON (after gzip decode)
 --------------------------------------------------------- */
-
-function validateDexieStructure(exportJson) {
-    if (!exportJson ||
-        exportJson.formatName !== "dexie" ||
-        exportJson.formatVersion !== 1) {
-        throw new Error("Invalid format: must be Dexie v1");
-    }
-
-    const db = exportJson.data;
-    if (!db ||
-        db.databaseName !== "chatbot-ui-v1" ||
-        db.databaseVersion !== 90) {
-        throw new Error("Invalid database metadata");
-    }
-
-    const tablesMeta = db.tables || [];
-    const tablesData = db.data || [];
-
-    for (const name of REQUIRED_TABLES) {
-        const meta = tablesMeta.find(t => t.name === name);
-        const data = tablesData.find(t => t.tableName === name);
-
-        if (!meta || !data) {
-            throw new Error(`Missing required table: ${name}`);
-        }
-
-        if (!data.inbound) {
-            throw new Error(`Table ${name} must have inbound: true`);
-        }
-
-        if (typeof meta.rowCount === "number" &&
-            Array.isArray(data.rows) &&
-            meta.rowCount !== data.rows.length) {
-            throw new Error(`rowCount mismatch in table: ${name}`);
-        }
-    }
-
-    return true;
-}
-
-function validateDexieStructureSafe(exportJson) {
+function loadDexieJson(json) {
     try {
-        validateDexieStructure(exportJson);
-        updateDexieStatus("Dexie Structure: OK");
-    } catch (err) {
-        updateDexieStatus("Dexie Structure: " + err.message, true);
+        window.smarhamrExport = json;
+
+        syncRowCounts(window.smarhamrExport);
+
+        runFullValidation(window.smarhamrExport);
+
+        renderDexieWorkspace(window.smarhamrExport);
+
+        updateTopbarStatus("Dexie Structure: OK", "#88cc88");
+
+        const fileNameEl = document.getElementById("currentFileName");
+        if (fileNameEl) fileNameEl.textContent = "Loaded Dexie Export";
+
+    } catch (e) {
+        console.error("Dexie load error:", e);
+        updateTopbarStatus("Dexie Load Error", "#ff5555");
     }
 }
 
 /* ---------------------------------------------------------
-   Update filename in top bar
+   Render Dexie Workspace (JSON viewer)
 --------------------------------------------------------- */
+function renderDexieWorkspace(exportJson) {
+    const ws = document.getElementById("dexieWorkspace");
+    if (!ws) return;
 
-function updateCurrentFileName(name) {
-    window.smarhamrCurrentFileName = name;
-    const el = document.getElementById("currentFileName");
-    if (el) el.textContent = name;
+    ws.innerHTML = ""; // clear
+
+    const pre = document.createElement("pre");
+    pre.style.color = "#eee";
+    pre.style.whiteSpace = "pre-wrap";
+    pre.style.fontFamily = "monospace";
+    pre.textContent = JSON.stringify(exportJson, null, 2);
+
+    ws.appendChild(pre);
 }
 
 /* ---------------------------------------------------------
-   Utility: GZIP decompress + JSON parse
+   Save workspace back into export object
 --------------------------------------------------------- */
+function saveWorkspaceToExport() {
+    const ws = document.getElementById("dexieWorkspace");
+    if (!ws || !window.smarhamrExport) return;
 
-async function loadFile(file) {
-    const isGzip = file.name.endsWith(".gz");
+    try {
+        const text = ws.innerText || ws.textContent;
+        const parsed = JSON.parse(text);
 
-    updateCurrentFileName(file.name);
+        window.smarhamrExport = parsed;
+        syncRowCounts(window.smarhamrExport);
 
-    if (isGzip) {
-        const arrayBuffer = await file.arrayBuffer();
-        const uint8 = new Uint8Array(arrayBuffer);
-        const decompressed = pako.ungzip(uint8, { to: "string" });
-        return JSON.parse(decompressed);
+        updateTopbarStatus("Dexie Structure: OK", "#88cc88");
+
+    } catch (e) {
+        updateTopbarStatus("Invalid JSON", "#ff5555");
+    }
+}
+/* ============================================================================
+   VALIDATION + SEVERITY CLASSIFICATION
+   ============================================================================ */
+
+/* ---------------------------------------------------------
+   Run full validation and classify severity
+--------------------------------------------------------- */
+function runFullValidation(exportJson) {
+    const report = DexieValidator.validate(exportJson);
+
+    const structural = report.structuralErrors.length;
+    const semantic = report.semanticWarnings.length;
+    const logic = report.logicEngineWarnings.length;
+
+    const total = structural + semantic + logic;
+
+    let level = "Informational";
+    let msg = "No issues detected.";
+
+    if (structural > 0) {
+        level = "Fatal";
+        msg = `${structural} structural issues`;
+    } else if (semantic > 0 || logic > 0) {
+        level = "Warning";
+        msg = `${semantic + logic} non-structural issues`;
+    }
+
+    updateIssueStatus(level, msg);
+
+    // Update topbar too
+    if (level === "Fatal") {
+        updateTopbarStatus("Dexie Structure: Fatal Issues", "#ff5555");
+    } else if (level === "Warning") {
+        updateTopbarStatus("Dexie Structure: Warnings", "#ffaa33");
     } else {
-        const text = await file.text();
-        return JSON.parse(text);
+        updateTopbarStatus("Dexie Structure: OK", "#88cc88");
     }
+
+    return report;
 }
 
-/* ---------------------------------------------------------
-   Load into workspace
---------------------------------------------------------- */
+/* ============================================================================
+   FIX-ALL LOGIC
+   ============================================================================ */
 
-async function handleFileLoad(file) {
+/* ---------------------------------------------------------
+   Fix All Issues
+--------------------------------------------------------- */
+function runFixAllOnCurrentExport() {
+    if (!window.smarhamrExport) return;
+
+    const before = DexieValidator.validate(window.smarhamrExport);
+
+    window.smarhamrExport = DexieCleaner.fixAll(window.smarhamrExport);
+
+    const after = DexieValidator.validate(window.smarhamrExport);
+
+    renderDexieWorkspace(window.smarhamrExport);
+
+    const fixedCount =
+        (before.structuralErrors.length +
+         before.semanticWarnings.length +
+         before.logicEngineWarnings.length) -
+        (after.structuralErrors.length +
+         after.semanticWarnings.length +
+         after.logicEngineWarnings.length);
+
+    const result = document.getElementById("dexieFixResult");
+    if (result) {
+        if (fixedCount > 0) {
+            result.textContent = `Fixed ${fixedCount} issues.`;
+            result.style.color = "#88cc88";
+        } else {
+            result.textContent = `No issues required fixing.`;
+            result.style.color = "#ccc";
+        }
+    }
+
+    runFullValidation(window.smarhamrExport);
+}
+
+/* ============================================================================
+   FILE INPUT HANDLING
+   ============================================================================ */
+
+/* ---------------------------------------------------------
+   Handle file input (JSON or GZ)
+--------------------------------------------------------- */
+document.getElementById("workbenchFileInput").addEventListener("change", async function (evt) {
+    const file = evt.target.files[0];
+    if (!file) return;
+
+    const fileNameEl = document.getElementById("currentFileName");
+    if (fileNameEl) fileNameEl.textContent = file.name;
+
+    const arrayBuffer = await file.arrayBuffer();
+    let text = "";
+
+    if (file.name.endsWith(".gz") || file.name.endsWith(".json.gz")) {
+        try {
+            const decompressed = pako.ungzip(new Uint8Array(arrayBuffer), { to: "string" });
+            text = decompressed;
+        } catch (e) {
+            updateTopbarStatus("GZ decode failed", "#ff5555");
+            return;
+        }
+    } else {
+        text = new TextDecoder().decode(arrayBuffer);
+    }
+
     try {
-        const data = await loadFile(file);
-
-        syncRowCounts(data);
-        validateDexieStructureSafe(data);
-
-        window.smarhamrExport = data;
-
-        localStorage.setItem("smarhamrExport", JSON.stringify(data));
-        localStorage.setItem("smarhamrExportFileName", file.name);
-
-        renderDexieWorkspace(data);
-
-    } catch (err) {
-        alert("Invalid Dexie export or structure mismatch.");
-        console.error(err);
-    }
-}
-
-/* ---------------------------------------------------------
-   Render full JSON workspace (editable)
---------------------------------------------------------- */
-
-function renderDexieWorkspace(data) {
-    const workspace = document.getElementById("dexieWorkspace");
-    workspace.innerHTML = "";
-
-    const editor = document.createElement("textarea");
-    editor.id = "dexieEditor";
-    editor.value = JSON.stringify(data, null, 2);
-    workspace.appendChild(editor);
-
-    editor.addEventListener("input", () => {
-        try {
-            const updated = JSON.parse(editor.value);
-            window.smarhamrExport = updated;
-            localStorage.setItem("smarhamrExport", JSON.stringify(updated));
-
-            syncRowCounts(updated);
-            validateDexieStructureSafe(updated);
-
-        } catch (err) {
-            updateDexieStatus("Dexie Structure: Invalid JSON", true);
-        }
-    });
-}
-
-/* ---------------------------------------------------------
-   Export: one-line JSON + gzip + user prefix
---------------------------------------------------------- */
-
-function exportGzipped() {
-    if (!window.smarhamrExport) {
-        alert("Nothing loaded.");
-        return;
-    }
-
-    const prefix = prompt("Enter file prefix (no extension):");
-    if (!prefix) return;
-
-    syncRowCounts(window.smarhamrExport);
-
-    const jsonOneLine = JSON.stringify(window.smarhamrExport);
-    const gzData = pako.gzip(jsonOneLine);
-    const blob = new Blob([gzData], { type: "application/gzip" });
-
-    const filename = `${prefix}.smarhamer.json.gz`;
-
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(a.href);
-}
-
-/* ---------------------------------------------------------
-   Initialize on page load
---------------------------------------------------------- */
-
-document.addEventListener("DOMContentLoaded", () => {
-    const fileInput = document.getElementById("workbenchFileInput");
-    if (!fileInput) return;
-
-    fileInput.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (file) handleFileLoad(file);
-    });
-
-    const saved = localStorage.getItem("smarhamrExport");
-    const savedName = localStorage.getItem("smarhamrExportFileName");
-
-    if (saved) {
-        try {
-            window.smarhamrExport = JSON.parse(saved);
-            updateCurrentFileName(savedName || "No file loaded");
-
-            syncRowCounts(window.smarhamrExport);
-            renderDexieWorkspace(window.smarhamrExport);
-            validateDexieStructureSafe(window.smarhamrExport);
-
-        } catch (err) {
-            console.warn("Failed to restore saved export:", err);
-        }
+        const json = JSON.parse(text);
+        loadDexieJson(json);
+    } catch (e) {
+        updateTopbarStatus("Invalid JSON", "#ff5555");
     }
 });
 /* ============================================================================
-   Persona ID Namespace (333xx)
+   EXPORT PIPELINE
    ============================================================================ */
 
-function getNextPersonaId() {
-    if (!window.smarhamrExport) return 33300;
-
-    const tables = window.smarhamrExport?.data?.data || [];
-    const charactersTable = tables.find(t => t.tableName === "characters");
-    if (!charactersTable) return 33300;
-
-    const ids = charactersTable.rows
-        .map(r => typeof r.id === "number" ? r.id : null)
-        .filter(id => id !== null && id >= 33300);
-
-    if (!ids.length) return 33300;
-    return Math.max(...ids) + 1;
-}
-
-/* ============================================================================
-   Tutor Shortcut Pack
-   ============================================================================ */
-
-const TUTOR_SHORTCUTS = [
-    {
-        name: "🗣️ Explain",
-        message: "/ai Explain this step-by-step.",
-        insertionType: "replace",
-        autoSend: true,
-        clearAfterSend: false
-    },
-    {
-        name: "📘 Docs",
-        message: "/ai Show SmarHamr documentation.",
-        insertionType: "replace",
-        autoSend: true,
-        clearAfterSend: false
-    },
-    {
-        name: "🔍 Inspect",
-        message: "/ai Inspect this export and describe issues.",
-        insertionType: "replace",
-        autoSend: true,
-        clearAfterSend: false
-    },
-    {
-        name: "🧪 Validate",
-        message: "/ai Validate this export.",
-        insertionType: "replace",
-        autoSend: true,
-        clearAfterSend: false
+function onDexieExportRequested() {
+    if (!window.smarhamrExport) {
+        updateTopbarStatus("No export loaded", "#ff5555");
+        return;
     }
-];
 
-/* ============================================================================
-   Build SmarHamr Tutor Bundle
-   ============================================================================ */
+    // Validate before export
+    const report = runFullValidation(window.smarhamrExport);
 
-function buildSmarHamrTutorBundle(personaId) {
-    const now = Date.now();
+    // Auto-fix if needed
+    if (
+        report.structuralErrors.length ||
+        report.semanticWarnings.length ||
+        report.logicEngineWarnings.length
+    ) {
+        window.smarhamrExport = DexieCleaner.fixAll(window.smarhamrExport);
+        runFullValidation(window.smarhamrExport);
+    }
 
-    const characterRow = {
-        name: "SmarHamr Tutor",
-        roleInstruction: "SmarHamr Tutor helps you understand Perchance exports and the SmarHamr Workbench.",
-        maxParagraphCountPerMessage: 0,
-        reminderMessage: "",
-        generalWritingInstructions: "",
-        messageWrapperStyle: "",
-        imagePromptPrefix: "",
-        imagePromptSuffix: "",
-        imagePromptTriggers: "",
-        fitMessagesInContextMethod: "summarizeOld",
-        autoGenerateMemories: "auto",
-        customCode: "",
-        messageInputPlaceholder: "",
-        metaTitle: "",
-        metaDescription: "",
-        metaImage: "",
-        modelName: "perchance-ai",
-        temperature: 0.8,
-        maxTokensPerMessage: 500,
-        textEmbeddingModelName: "Xenova/bge-base-en-v1.5",
-        initialMessages: [
-            {
-                author: "ai",
-                content: "Welcome! This export includes the SmarHamr Tutor.\nVisit https://calebbartlett.github.io/SmarHamr/ for documentation."
-            }
-        ],
-        shortcutButtons: TUTOR_SHORTCUTS,
-        loreBookUrls: [],
-        avatar: { url: "", size: 1, shape: "square" },
-        scene: { background: { url: "" }, music: { url: "" } },
-        userCharacter: { avatar: {} },
-        systemCharacter: { avatar: {} },
-        streamingResponse: true,
-        folderPath: "",
-        customData: {},
-        uuid: null,
-        creationTime: now,
-        lastMessageTime: now,
-        id: personaId,
-        $types: {
-            maxParagraphCountPerMessage: "undef",
-            initialMessages: "arrayNonindexKeys",
-            shortcutButtons: "arrayNonindexKeys",
-            loreBookUrls: "arrayNonindexKeys"
-        }
-    };
+    // Export as gzipped JSON
+    try {
+        const jsonStr = JSON.stringify(window.smarhamrExport, null, 2);
+        const gz = pako.gzip(jsonStr);
 
-    const threadRow = {
-        name: "SmarHamr Tutor Thread",
-        characterId: personaId,
-        creationTime: now,
-        lastMessageTime: now,
-        lastViewTime: now,
-        isFav: false,
-        userCharacter: { avatar: {} },
-        systemCharacter: { avatar: {} },
-        character: { avatar: {} },
-        modelName: "perchance-ai",
-        customCodeWindow: { visible: false, width: null },
-        customData: {},
-        folderPath: "",
-        loreBookId: 0,
-        textEmbeddingModelName: "Xenova/bge-base-en-v1.5",
-        userMessagesSentHistory: [],
-        unsentMessageText: "",
-        shortcutButtons: TUTOR_SHORTCUTS,
-        currentSummaryHashChain: [],
-        id: personaId,
-        $types: {
-            userMessagesSentHistory: "arrayNonindexKeys",
-            shortcutButtons: "arrayNonindexKeys",
-            currentSummaryHashChain: "arrayNonindexKeys"
-        }
-    };
+        const blob = new Blob([gz], { type: "application/gzip" });
+        const url = URL.createObjectURL(blob);
 
-    const messageRow = {
-        threadId: personaId,
-        message: "This export was modified by SmarHamr Workbench.\nVisit https://calebbartlett.github.io/SmarHamr/ for docs and tools.",
-        characterId: personaId,
-        hiddenFrom: [],
-        expectsReply: 0,
-        creationTime: now,
-        variants: [null],
-        memoryIdBatchesUsed: [],
-        loreIdsUsed: [],
-        summaryHashUsed: null,
-        summariesUsed: null,
-        summariesEndingHere: null,
-        memoriesEndingHere: null,
-        memoryQueriesUsed: [],
-        messageIdsUsed: [],
-        name: null,
-        scene: null,
-        avatar: {},
-        customData: {},
-        wrapperStyle: "",
-        order: 0,
-        instruction: null,
-        id: personaId,
-        $types: {
-            hiddenFrom: "arrayNonindexKeys",
-            expectsReply: "undef",
-            variants: "arrayNonindexKeys",
-            memoryIdBatchesUsed: "arrayNonindexKeys",
-            loreIdsUsed: "arrayNonindexKeys",
-            memoryQueriesUsed: "arrayNonindexKeys",
-            messageIdsUsed: "arrayNonindexKeys"
-        }
-    };
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "smarhamr-dexie.json.gz";
+        a.click();
 
-    return { characterRow, threadRow, messageRow };
+        updateTopbarStatus("Export successful", "#88cc88");
+
+    } catch (e) {
+        console.error("Export error:", e);
+        updateTopbarStatus("Export failed", "#ff5555");
+    }
 }
 
 /* ============================================================================
-   Insert SmarHamr Tutor
+   LOAD CLEAN SMARHAMR PROFILE
+   ============================================================================ */
+
+function onLoadCleanSmarHamrProfile() {
+    fetch("clean-smarhamr-dexie.json")
+        .then(r => r.json())
+        .then(json => {
+            loadDexieJson(json);
+            updateTopbarStatus("Loaded clean SmarHamr Dexie", "#88cc88");
+        })
+        .catch(err => {
+            console.error(err);
+            updateTopbarStatus("Failed to load clean profile", "#ff5555");
+        });
+}
+
+/* ============================================================================
+   INSERT SMARHAMR TUTOR
    ============================================================================ */
 
 function onInsertSmarHamrTutor() {
     if (!window.smarhamrExport) {
-        alert("Load a Dexie export first.");
+        updateTopbarStatus("Load a Dexie export first", "#ff5555");
         return;
     }
 
-    const personaId = getNextPersonaId();
-    const { characterRow, threadRow, messageRow } = buildSmarHamrTutorBundle(personaId);
+    try {
+        const tables = window.smarhamrExport.data.data;
+        const characters = tables.find(t => t.tableName === "characters");
 
-    const tables = window.smarhamrExport.data.data;
+        const tutor = {
+            id: 33300,
+            name: "SmarHamr Tutor",
+            roleInstruction: "Provide structured guidance and clarity.",
+            generalWritingInstructions: "Be concise, helpful, and accurate.",
+            initialMessages: [],
+            shortcutButtons: [],
+            avatar: {},
+            scene: {},
+            customData: {}
+        };
 
-    const charactersTable = tables.find(t => t.tableName === "characters");
-    const threadsTable = tables.find(t => t.tableName === "threads");
-    const messagesTable = tables.find(t => t.tableName === "messages");
+        characters.rows.push(tutor);
+        syncRowCounts(window.smarhamrExport);
 
-    if (!charactersTable || !threadsTable || !messagesTable) {
-        alert("This export does not contain Perchance tables.");
-        return;
+        renderDexieWorkspace(window.smarhamrExport);
+        runFullValidation(window.smarhamrExport);
+
+        updateTopbarStatus("Tutor inserted", "#88cc88");
+
+    } catch (e) {
+        console.error(e);
+        updateTopbarStatus("Tutor insertion failed", "#ff5555");
     }
-
-    charactersTable.rows.push(characterRow);
-    threadsTable.rows.push(threadRow);
-    messagesTable.rows.push(messageRow);
-
-    syncRowCounts(window.smarhamrExport);
-
-    localStorage.setItem("smarhamrExport", JSON.stringify(window.smarhamrExport));
-    renderDexieWorkspace(window.smarhamrExport);
-    validateDexieStructureSafe(window.smarhamrExport);
-
-    alert("SmarHamr Tutor inserted successfully.");
 }
 
 /* ============================================================================
-   Insert Logic Engine (append to misc.userRoleInstruction)
+   INSERT LOGIC ENGINE
    ============================================================================ */
-
-function buildLogicEngineModule() {
-    return {
-        logic_engine: {
-            spirals: ["Hand", "Hearth", "Shadow"],
-            pressure_levels: ["Soft", "Medium", "Hard"],
-            tethers: {
-                types: ["stabilizing", "destabilizing", "amplifying", "dampening"]
-            },
-            state_elasticity: {
-                baseline_recovery: true,
-                collapse_vectors: true
-            },
-            interaction_memory: {
-                emotional_residue: true,
-                behavioral_inertia: true
-            },
-            environment_resonance: {
-                fields: ["ambient", "active", "overwhelming"]
-            },
-            adaptive_thresholds: {
-                dynamic_spiral_limits: true
-            }
-        },
-        note: "This logic engine belongs in the USER ROLE. It defines global physics for all worlds and characters."
-    };
-}
 
 function onInsertLogicEngine() {
     if (!window.smarhamrExport) {
-        alert("Load a Dexie export first.");
+        updateTopbarStatus("Load a Dexie export first", "#ff5555");
         return;
     }
 
-    const exportJson = window.smarhamrExport;
+    try {
+        const miscTable = window.smarhamrExport.data.data.find(t => t.tableName === "misc");
 
-    const miscTable = exportJson.data.data.find(t => t.tableName === "misc");
-    if (!miscTable) {
-        alert("This export does not contain a misc table.");
-        return;
+        const logicEngine = {
+            key: "userRoleInstruction",
+            value: JSON.stringify({
+                "scene.background.url": "default-bg.png",
+                "characterName": "SmarHamr Tutor",
+                "threadMessages": []
+            }, null, 2)
+        };
+
+        miscTable.rows.push(logicEngine);
+
+        renderDexieWorkspace(window.smarhamrExport);
+        runFullValidation(window.smarhamrExport);
+
+        updateTopbarStatus("Logic engine inserted", "#88cc88");
+
+    } catch (e) {
+        console.error(e);
+        updateTopbarStatus("Logic engine insertion failed", "#ff5555");
     }
-
-    let userRoleRow = miscTable.rows.find(r => r.key === "userRoleInstruction");
-
-    if (!userRoleRow) {
-        userRoleRow = { key: "userRoleInstruction", value: "" };
-        miscTable.rows.push(userRoleRow);
-    }
-
-    const module = buildLogicEngineModule();
-
-    const existing = userRoleRow.value || "";
-
-    userRoleRow.value =
-        existing +
-        "\n\n======== LOGIC ENGINE GOES HERE ========\n\n" +
-        JSON.stringify(module, null, 2);
-
-    syncRowCounts(exportJson);
-
-    localStorage.setItem("smarhamrExport", JSON.stringify(exportJson));
-    renderDexieWorkspace(exportJson);
-    validateDexieStructureSafe(exportJson);
-
-    alert("Logic Engine appended to misc.userRoleInstruction.");
 }
+
 /* ============================================================================
-   Load Clean SmarHamr Profile
+   INITIALIZATION
    ============================================================================ */
 
-function onLoadCleanSmarHamrProfile() {
-    const personaId = 33300;
-    const now = Date.now();
-    const { characterRow, threadRow, messageRow } = buildSmarHamrTutorBundle(personaId);
+document.addEventListener("DOMContentLoaded", () => {
+    updateTopbarStatus("Ready", "#ccc");
 
-    const cleanExport = {
-        formatName: "dexie",
-        formatVersion: 1,
-        data: {
-            databaseName: "chatbot-ui-v1",
-            databaseVersion: 90,
-            tables: [
-                { name: "characters", schema: "++id,modelName,fitMessagesInContextMethod,uuid,creationTime,lastMessageTime,folderPath", rowCount: 1 },
-                { name: "threads", schema: "++id,name,characterId,creationTime,lastMessageTime,lastViewTime,folderPath", rowCount: 1 },
-                { name: "messages", schema: "++id,threadId,characterId,creationTime,order", rowCount: 1 },
-                { name: "misc", schema: "key", rowCount: 4 },
-                { name: "summaries", schema: "hash,threadId", rowCount: 0 },
-                { name: "memories", schema: "++id,[summaryHash+threadId],[characterId+status],[threadId+status],[threadId+index],threadId", rowCount: 0 },
-                { name: "lore", schema: "++id,bookId,bookUrl", rowCount: 0 },
-                { name: "textEmbeddingCache", schema: "++id,textHash,&[textHash+modelName]", rowCount: 0 },
-                { name: "textCompressionCache", schema: "++id,uncompressedTextHash,&[uncompressedTextHash+modelName+tokenLimit]", rowCount: 0 }
-            ],
-            data: [
-                {
-                    tableName: "characters",
-                    inbound: true,
-                    rows: [characterRow]
-                },
-                {
-                    tableName: "threads",
-                    inbound: true,
-                    rows: [threadRow]
-                },
-                {
-                    tableName: "messages",
-                    inbound: true,
-                    rows: [messageRow]
-                },
-                {
-                    tableName: "misc",
-                    inbound: true,
-                    rows: [
-                        { key: "showInlineReminder", value: "no" },
-                        { key: "userAvatarUrl", value: "" },
-                        { key: "userName", value: "User" },
-                        { key: "userRoleInstruction", value: "" }
-                    ]
-                },
-                {
-                    tableName: "summaries",
-                    inbound: true,
-                    rows: []
-                },
-                {
-                    tableName: "memories",
-                    inbound: true,
-                    rows: []
-                },
-                {
-                    tableName: "lore",
-                    inbound: true,
-                    rows: []
-                },
-                {
-                    tableName: "textEmbeddingCache",
-                    inbound: true,
-                    rows: []
-                },
-                {
-                    tableName: "textCompressionCache",
-                    inbound: true,
-                    rows: []
-                }
-            ]
-        }
-    };
-
-    syncRowCounts(cleanExport);            // FIXED
-
-    window.smarhamrExport = cleanExport;
-    updateCurrentFileName("SmarHamr Clean Profile (in-memory)");
-
-    localStorage.setItem("smarhamrExport", JSON.stringify(cleanExport));
-    localStorage.setItem("smarhamrExportFileName", "smarhamr-clean-profile.json");
-
-    renderDexieWorkspace(cleanExport);
-    validateDexieStructureSafe(cleanExport);
-
-    alert("Clean SmarHamr profile loaded.\nExport it to use in Perchance.");
-}
-
+    const fixBtn = document.getElementById("dexie-fixall-btn");
+    if (fixBtn) fixBtn.onclick = runFixAllOnCurrentExport;
+});
