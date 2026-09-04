@@ -1,11 +1,11 @@
 /* ============================================================================
-   SmarHamr Workbench — Dexie Editor (Integrated with Validator + Cleaner)
+   SmarHamr Workbench — Unified Dexie Loader + Validator + Cleaner
    ============================================================================ */
 
 window.smarhamrExport = null;
 
 /* ---------------------------------------------------------
-   Update topbar status (Dexie Structure: OK)
+   UI Status Helpers
 --------------------------------------------------------- */
 function updateTopbarStatus(msg, color = "#888") {
     const el = document.getElementById("dexieStatus");
@@ -15,9 +15,6 @@ function updateTopbarStatus(msg, color = "#888") {
     }
 }
 
-/* ---------------------------------------------------------
-   Update issue status (below workspace)
---------------------------------------------------------- */
 function updateIssueStatus(level, message) {
     const el = document.getElementById("dexieIssueStatus");
     if (!el) return;
@@ -32,7 +29,7 @@ function updateIssueStatus(level, message) {
 }
 
 /* ---------------------------------------------------------
-   Sync rowCounts after modifications
+   Sync rowCounts
 --------------------------------------------------------- */
 function syncRowCounts(exportJson) {
     const metaTables = exportJson.data.tables;
@@ -40,44 +37,18 @@ function syncRowCounts(exportJson) {
 
     for (const meta of metaTables) {
         const data = dataTables.find(t => t.tableName === meta.name);
-        if (data) {
-            meta.rowCount = data.rows.length;
-        }
+        if (data) meta.rowCount = data.rows.length;
     }
 }
 
 /* ---------------------------------------------------------
-   Load Dexie JSON (after gzip decode)
---------------------------------------------------------- */
-function loadDexieJson(json) {
-    try {
-        window.smarhamrExport = json;
-
-        syncRowCounts(window.smarhamrExport);
-
-        runFullValidation(window.smarhamrExport);
-
-        renderDexieWorkspace(window.smarhamrExport);
-
-        updateTopbarStatus("Dexie Structure: OK", "#88cc88");
-
-        const fileNameEl = document.getElementById("currentFileName");
-        if (fileNameEl) fileNameEl.textContent = "Loaded Dexie Export";
-
-    } catch (e) {
-        console.error("Dexie load error:", e);
-        updateTopbarStatus("Dexie Load Error", "#ff5555");
-    }
-}
-
-/* ---------------------------------------------------------
-   Render Dexie Workspace (JSON viewer)
+   Render Dexie JSON Viewer
 --------------------------------------------------------- */
 function renderDexieWorkspace(exportJson) {
     const ws = document.getElementById("dexieWorkspace");
     if (!ws) return;
 
-    ws.innerHTML = ""; // clear
+    ws.innerHTML = "";
 
     const pre = document.createElement("pre");
     pre.style.color = "#eee";
@@ -89,31 +60,7 @@ function renderDexieWorkspace(exportJson) {
 }
 
 /* ---------------------------------------------------------
-   Save workspace back into export object
---------------------------------------------------------- */
-function saveWorkspaceToExport() {
-    const ws = document.getElementById("dexieWorkspace");
-    if (!ws || !window.smarhamrExport) return;
-
-    try {
-        const text = ws.innerText || ws.textContent;
-        const parsed = JSON.parse(text);
-
-        window.smarhamrExport = parsed;
-        syncRowCounts(window.smarhamrExport);
-
-        updateTopbarStatus("Dexie Structure: OK", "#88cc88");
-
-    } catch (e) {
-        updateTopbarStatus("Invalid JSON", "#ff5555");
-    }
-}
-/* ============================================================================
-   VALIDATION + SEVERITY CLASSIFICATION
-   ============================================================================ */
-
-/* ---------------------------------------------------------
-   Run full validation and classify severity
+   Full Validation
 --------------------------------------------------------- */
 function runFullValidation(exportJson) {
     const report = DexieValidator.validate(exportJson);
@@ -121,8 +68,6 @@ function runFullValidation(exportJson) {
     const structural = report.structuralErrors.length;
     const semantic = report.semanticWarnings.length;
     const logic = report.logicEngineWarnings.length;
-
-    const total = structural + semantic + logic;
 
     let level = "Informational";
     let msg = "No issues detected.";
@@ -137,25 +82,16 @@ function runFullValidation(exportJson) {
 
     updateIssueStatus(level, msg);
 
-    // Update topbar too
-    if (level === "Fatal") {
-        updateTopbarStatus("Dexie Structure: Fatal Issues", "#ff5555");
-    } else if (level === "Warning") {
-        updateTopbarStatus("Dexie Structure: Warnings", "#ffaa33");
-    } else {
-        updateTopbarStatus("Dexie Structure: OK", "#88cc88");
-    }
+    if (level === "Fatal") updateTopbarStatus("Dexie Structure: Fatal Issues", "#ff5555");
+    else if (level === "Warning") updateTopbarStatus("Dexie Structure: Warnings", "#ffaa33");
+    else updateTopbarStatus("Dexie Structure: OK", "#88cc88");
 
     return report;
 }
-
 /* ============================================================================
    FIX-ALL LOGIC
    ============================================================================ */
 
-/* ---------------------------------------------------------
-   Fix All Issues
---------------------------------------------------------- */
 function runFixAllOnCurrentExport() {
     if (!window.smarhamrExport) return;
 
@@ -177,45 +113,35 @@ function runFixAllOnCurrentExport() {
 
     const result = document.getElementById("dexieFixResult");
     if (result) {
-        if (fixedCount > 0) {
-            result.textContent = `Fixed ${fixedCount} issues.`;
-            result.style.color = "#88cc88";
-        } else {
-            result.textContent = `No issues required fixing.`;
-            result.style.color = "#ccc";
-        }
+        result.textContent = fixedCount > 0
+            ? `Fixed ${fixedCount} issues.`
+            : `No issues required fixing.`;
+        result.style.color = fixedCount > 0 ? "#88cc88" : "#ccc";
     }
 
     runFullValidation(window.smarhamrExport);
 }
 
 /* ============================================================================
-   FILE INPUT HANDLING
+   FILE LOADING (JSON + GZ)
    ============================================================================ */
 
-/* ---------------------------------------------------------
-   Handle file input (JSON or GZ)
---------------------------------------------------------- */
-document.getElementById("workbenchFileInput").addEventListener("change", async function (evt) {
-    const file = evt.target.files[0];
-    if (!file) return;
-
+async function loadDexieFile(file) {
     const fileNameEl = document.getElementById("currentFileName");
     if (fileNameEl) fileNameEl.textContent = file.name;
 
     const arrayBuffer = await file.arrayBuffer();
     let text = "";
 
-    if (file.name.endsWith(".gz") || file.name.endsWith(".json.gz")) {
-        try {
-            const decompressed = pako.ungzip(new Uint8Array(arrayBuffer), { to: "string" });
-            text = decompressed;
-        } catch (e) {
-            updateTopbarStatus("GZ decode failed", "#ff5555");
-            return;
+    try {
+        if (file.name.endsWith(".gz") || file.name.endsWith(".json.gz")) {
+            text = pako.ungzip(new Uint8Array(arrayBuffer), { to: "string" });
+        } else {
+            text = new TextDecoder().decode(arrayBuffer);
         }
-    } else {
-        text = new TextDecoder().decode(arrayBuffer);
+    } catch (e) {
+        updateTopbarStatus("GZ decode failed", "#ff5555");
+        return;
     }
 
     try {
@@ -224,9 +150,28 @@ document.getElementById("workbenchFileInput").addEventListener("change", async f
     } catch (e) {
         updateTopbarStatus("Invalid JSON", "#ff5555");
     }
-});
+}
+
 /* ============================================================================
-   EXPORT PIPELINE
+   LOAD DEXIE JSON (POST-PARSE)
+   ============================================================================ */
+
+function loadDexieJson(json) {
+    try {
+        window.smarhamrExport = json;
+
+        syncRowCounts(window.smarhamrExport);
+        runFullValidation(window.smarhamrExport);
+        renderDexieWorkspace(window.smarhamrExport);
+
+        updateTopbarStatus("Dexie Structure: OK", "#88cc88");
+
+    } catch (e) {
+        updateTopbarStatus("Dexie Load Error", "#ff5555");
+    }
+}
+/* ============================================================================
+   EXPORT DEXIE JSON.GZ
    ============================================================================ */
 
 function onDexieExportRequested() {
@@ -235,20 +180,17 @@ function onDexieExportRequested() {
         return;
     }
 
-    // Validate before export
     const report = runFullValidation(window.smarhamrExport);
 
-    // Auto-fix if needed
-    if (
-        report.structuralErrors.length ||
+    // Auto-fix before export
+    if (report.structuralErrors.length ||
         report.semanticWarnings.length ||
-        report.logicEngineWarnings.length
-    ) {
+        report.logicEngineWarnings.length) {
+
         window.smarhamrExport = DexieCleaner.fixAll(window.smarhamrExport);
         runFullValidation(window.smarhamrExport);
     }
 
-    // Export as gzipped JSON
     try {
         const jsonStr = JSON.stringify(window.smarhamrExport, null, 2);
         const gz = pako.gzip(jsonStr);
@@ -264,13 +206,12 @@ function onDexieExportRequested() {
         updateTopbarStatus("Export successful", "#88cc88");
 
     } catch (e) {
-        console.error("Export error:", e);
         updateTopbarStatus("Export failed", "#ff5555");
     }
 }
 
 /* ============================================================================
-   LOAD CLEAN SMARHAMR PROFILE
+   LOAD CLEAN SMARHAMR DEXIE
    ============================================================================ */
 
 function onLoadCleanSmarHamrProfile() {
@@ -280,93 +221,23 @@ function onLoadCleanSmarHamrProfile() {
             loadDexieJson(json);
             updateTopbarStatus("Loaded clean SmarHamr Dexie", "#88cc88");
         })
-        .catch(err => {
-            console.error(err);
+        .catch(() => {
             updateTopbarStatus("Failed to load clean profile", "#ff5555");
         });
 }
 
 /* ============================================================================
-   INSERT SMARHAMR TUTOR
-   ============================================================================ */
-
-function onInsertSmarHamrTutor() {
-    if (!window.smarhamrExport) {
-        updateTopbarStatus("Load a Dexie export first", "#ff5555");
-        return;
-    }
-
-    try {
-        const tables = window.smarhamrExport.data.data;
-        const characters = tables.find(t => t.tableName === "characters");
-
-        const tutor = {
-            id: 33300,
-            name: "SmarHamr Tutor",
-            roleInstruction: "Provide structured guidance and clarity.",
-            generalWritingInstructions: "Be concise, helpful, and accurate.",
-            initialMessages: [],
-            shortcutButtons: [],
-            avatar: {},
-            scene: {},
-            customData: {}
-        };
-
-        characters.rows.push(tutor);
-        syncRowCounts(window.smarhamrExport);
-
-        renderDexieWorkspace(window.smarhamrExport);
-        runFullValidation(window.smarhamrExport);
-
-        updateTopbarStatus("Tutor inserted", "#88cc88");
-
-    } catch (e) {
-        console.error(e);
-        updateTopbarStatus("Tutor insertion failed", "#ff5555");
-    }
-}
-
-/* ============================================================================
-   INSERT LOGIC ENGINE
-   ============================================================================ */
-
-function onInsertLogicEngine() {
-    if (!window.smarhamrExport) {
-        updateTopbarStatus("Load a Dexie export first", "#ff5555");
-        return;
-    }
-
-    try {
-        const miscTable = window.smarhamrExport.data.data.find(t => t.tableName === "misc");
-
-        const logicEngine = {
-            key: "userRoleInstruction",
-            value: JSON.stringify({
-                "scene.background.url": "default-bg.png",
-                "characterName": "SmarHamr Tutor",
-                "threadMessages": []
-            }, null, 2)
-        };
-
-        miscTable.rows.push(logicEngine);
-
-        renderDexieWorkspace(window.smarhamrExport);
-        runFullValidation(window.smarhamrExport);
-
-        updateTopbarStatus("Logic engine inserted", "#88cc88");
-
-    } catch (e) {
-        console.error(e);
-        updateTopbarStatus("Logic engine insertion failed", "#ff5555");
-    }
-}
-
-/* ============================================================================
-   INITIALIZATION
+   FILE INPUT LISTENER
    ============================================================================ */
 
 document.addEventListener("DOMContentLoaded", () => {
     updateTopbarStatus("Ready", "#ccc");
+
+    const fileInput = document.getElementById("workbenchFileInput");
+    fileInput.addEventListener("change", evt => {
+        const file = evt.target.files[0];
+        if (file) loadDexieFile(file);
+    });
 
     const fixBtn = document.getElementById("dexie-fixall-btn");
     if (fixBtn) fixBtn.onclick = runFixAllOnCurrentExport;
