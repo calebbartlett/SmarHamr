@@ -44,16 +44,6 @@
             opacity: 0.85;
         }
 
-        #dexieEditor {
-            font-family: monospace;
-            background: #111;
-            color: #eee;
-            border: 1px solid #444;
-            padding: 10px;
-            resize: none;
-            width: 100%;
-            height: calc(100vh - 140px);
-        }
         .button-small {
             padding: 6px 12px;
             margin: 4px;
@@ -65,25 +55,40 @@
         .button-small:hover {
             background: #333;
         }
+
         #loaderToolbox {
             padding: 10px;
             text-align: center;
             border-bottom: 1px solid #444;
         }
+
         #layout {
             display: flex;
             height: calc(100vh - 40px);
         }
+
         .left-nav {
             width: 220px;
             border-right: 1px solid #444;
             padding: 10px;
             overflow-y: auto;
         }
+
         .workspace {
             flex: 1;
             padding: 10px;
             overflow-y: auto;
+        }
+
+        /* Dexie JSON viewer */
+        #dexieWorkspace {
+            background: #111;
+            border: 1px solid #444;
+            padding: 10px;
+            color: #eee;
+            font-family: monospace;
+            white-space: pre-wrap;
+            min-height: 400px;
         }
 
         /* Validator panel */
@@ -156,6 +161,8 @@
 
         <!-- Workspace -->
         <div class="workspace">
+
+            <!-- Dexie JSON Viewer -->
             <div id="dexieWorkspace">
                 <p style="color:#888;">Load a Dexie JSON or JSON.GZ file to begin.</p>
             </div>
@@ -170,6 +177,7 @@
 
                 <div id="dexieFixResult"></div>
             </div>
+
         </div>
 
     </div>
